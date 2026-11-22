@@ -2,7 +2,7 @@
 
 **Functional reference:** `3.0.0-rc.12-repair.6`, through commit `7d6708d`. **Initial plan:** 2026-11-21. This roadmap organizes work for an early community fork; it is not a schedule or a promise that proposed features are implemented.
 
-The initial target is a reproducible desktop client for manual play in one window, with up to four accounts as the practical use case. The application store allows eight tabs, but this has not been validated with eight active accounts. Windows x64 is the current test platform. Linux, beginning with Void Linux glibc/X11, is a future target. Distributable binaries are planned for a later phase.
+The initial target is a reproducible desktop client for manual play with up to four tabs per window. Windows x64 is the current test platform. Linux, beginning with Void Linux glibc/X11, is a future target. Distributable binaries are planned for a later phase.
 
 ## Priority levels
 
@@ -30,7 +30,7 @@ Completed items refer only to evidence in the [validation record](../testing/val
 
 | Milestone | Scope | Exit condition |
 | --- | --- | --- |
-| **M0 — preserve the baseline** | H01–H02; import the repair into the fork; run initial tester checks. | A known revision, repeatable checks, and actionable issue reports. |
+| **M0 — preserve the baseline** | H01–H02 and initial tester checks on the published fork. | A known revision, repeatable checks, and actionable issue reports. |
 | **M1 — reduce fragility** | H03–H06, as separate changes. | Authentication/account tests pass without cross-session state; runtime and trust boundaries are reviewed. |
 | **M2 — maintain and distribute** | H07–H11; complete the Windows matrix. | Recoverable updates, diagnosable mods, and a Windows artifact validated on a clean machine. |
 | **M3 — Linux** | L01–L03, after a known Windows baseline. | Documented Linux setup and execution without Windows regressions. |

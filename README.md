@@ -19,9 +19,9 @@ The following behavior has been confirmed by the maintainer on Windows 11 x64:
 - Manual tab switching and automatic tab selection at the start of a character's combat turn.
 - Tab portraits, background audio, zaap search, the party prospecting icon, and the in-game store.
 
-The application store supports up to **eight tabs**, but that limit has not been validated with eight active accounts. The initial target for regular use is up to four accounts. Four-account sessions, long sessions, saved-account login, and the complete notification/window-focus settings matrix remain unverified. See the [validation record](docs/testing/validation.md) for evidence and limits.
+Each game window supports up to **four tabs**. Four-account sessions, long sessions, saved-account login, and the complete notification/window-focus settings matrix remain unverified. See the [validation record](docs/testing/validation.md) for evidence and limits.
 
-The project has a regression suite with 74 tests. These cover application logic using controlled dependencies and simulated environments; they do not replace testing against the live game client.
+The regression suite covers application logic using controlled dependencies and simulated environments. The validation record also lists the scenarios exercised in the game.
 
 ![Lindo interface screenshot from the original project](screenshots/pc-touch-ingame.jpg)
 
@@ -29,7 +29,7 @@ The project has a regression suite with 74 tests. These cover application logic 
 
 ## Getting started
 
-There is no ready-to-run binary yet. The [tester quick-start](docs/testing/readme.txt) describes the current Windows x64 source-run procedure. It is for testing, not a supported release installation. See the [manual test plan](docs/testing/manual-test-plan.md) for test scope.
+PC-Touch is currently available as source code. Local development uses Node.js 24, Yarn Classic, and the scripts in [package.json](package.json).
 
 ## Repository map
 

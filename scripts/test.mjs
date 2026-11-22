@@ -28,6 +28,7 @@ try {
   await build({
     entryPoints: {
       'game-store': 'packages/renderer/src/store/game-store/game-store.ts',
+      'root-store': 'packages/renderer/src/store/root-store/root-store.ts',
       'fight-options': 'packages/shared/models/option-store/game-fight-option/game-fight-option.ts',
       notifications: 'packages/renderer/src/mods/notifications/notifications.ts',
       'game-manager': 'packages/renderer/src/screens/main-screen/game-screen/game-manager.ts',

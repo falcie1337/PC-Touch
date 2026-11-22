@@ -13,7 +13,6 @@ This directory contains public project, maintenance, testing, and repair-history
 
 - [Manual test plan](testing/manual-test-plan.md) — scenarios and expected results for targeted testing.
 - [Validation record](testing/validation.md) — results already observed, with limitations.
-- [Tester quick-start](testing/readme.txt) — short Windows x64 source-run instructions for testers.
 
 ## Repair history
 

@@ -2,32 +2,25 @@ import React from 'react'
 import styles from './tab.module.scss'
 import classNames from 'classnames'
 import { darken, Icon, lighten, styled } from '@mui/material'
+import { observer } from 'mobx-react-lite'
 import { useStores } from '@/store'
-import { useI18nContext } from '@lindo/i18n'
 
 interface TabAddProps {
   className?: string
 }
 
-export const TabAdd = styled((props: TabAddProps) => {
-  const { gameStore } = useStores()
-  const { LL } = useI18nContext()
+export const TabAdd = styled(
+  observer((props: TabAddProps) => {
+    const { gameStore } = useStores()
+    if (!gameStore.canAddGame) return null
 
-  const handleAddGame = () => {
-    if (gameStore.games.length < 6) {
-      gameStore.addGame()
-    } else {
-      alert(LL.window.main.tabsOverflow.text())
-      gameStore.addGame()
-    }
-  }
-
-  return (
-    <div onClick={handleAddGame} className={classNames(styles.tab, props.className)}>
-      <Icon sx={{ fontSize: 24 }}>add</Icon>
-    </div>
-  )
-})(
+    return (
+      <div onClick={() => gameStore.addGame()} className={classNames(styles.tab, props.className)}>
+        <Icon sx={{ fontSize: 24 }}>add</Icon>
+      </div>
+    )
+  })
+)(
   ({ theme }) => `
   background: ${darken(theme.palette.background.paper, 0.2)};
   color: ${lighten(theme.palette.background.paper, 0.5)};

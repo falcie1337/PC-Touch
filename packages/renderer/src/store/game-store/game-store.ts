@@ -1,8 +1,6 @@
 import { Instance, SnapshotOut, types } from 'mobx-state-tree'
-import { GameCharacter, MultiAccountContext, withRootStore } from '@lindo/shared'
+import { GameCharacter, MAX_GAME_TABS, MultiAccountContext, withRootStore } from '@lindo/shared'
 import { Game, GameModel } from './game'
-
-export const MAX_GAME_TABS = 8
 
 /**
  * Model description here for TypeScript hints.
@@ -16,15 +14,21 @@ export const GameStoreModel = types
     selectedGame: types.safeReference(GameModel)
   })
   .extend(withRootStore)
+  .views((self) => ({
+    get games() {
+      return Array.from(self._games.values())
+    },
+    get canAddGame() {
+      return self._games.size < MAX_GAME_TABS
+    }
+  }))
   .actions((self) => ({
     toggleMute() {
       self.isMuted = !self.isMuted
       window.lindoAPI.setAudioMuteWindow(self.isMuted)
     },
     addGame(character?: GameCharacter) {
-      if (self._games.size >= MAX_GAME_TABS) {
-        throw new Error(`More than ${MAX_GAME_TABS} game tabs are not supported`)
-      }
+      if (!self.canAddGame) return
       const game = self._games.put({ character: character?.id })
       self.gamesOrder.push(game)
       self.selectedGame = game
@@ -93,14 +97,6 @@ export const GameStoreModel = types
       if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return
       self.gamesOrder.splice(oldIndex, 1)
       self.gamesOrder.splice(newIndex, 0, srcGame)
-    }
-  }))
-  .views((self) => ({
-    /**
-     * Get all games non ordonned.
-     */
-    get games() {
-      return Array.from(self._games.values())
     }
   }))
 

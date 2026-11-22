@@ -1,6 +1,6 @@
 # Validation record
 
-Initial results recorded on 2026-11-21. The documentation reorganization does not change the functional `repair.6` code or add manual test results.
+Initial `repair.6` results recorded on 2026-11-21. Subsequent validation is listed separately.
 
 ## Automated and development checks
 
@@ -13,9 +13,15 @@ Initial results recorded on 2026-11-21. The documentation reorganization does no
 | Renderer Vite startup with Windows-invalid filename behavior simulated under Node 24 | Old configuration reproduced the error; corrected configuration served HTML, `main.tsx`, and `App.tsx`. |
 | Current Ankama bundle patch rules | Resulting JavaScript parsed; `singletons` and `CharacterDisplay` were exposed. |
 | Updater against real HTTP with a temporary directory | Completed. A second update reused the cache; obsolete-file removal passed. |
-| Eight-tab navigation, close, and reorder | Passed against the real store. This is not an eight-account gameplay test. |
+| Original eight-tab navigation, close, and reorder | Passed against the real store in `repair.6`. |
 | Tab selection and notification/focus choice | Logic passed with simulated events; user confirmed turn-based selection. Desktop notification/focus settings remain untested manually. |
 | Electron packaging for Windows | Not verified. |
+
+## Four-tab limit
+
+The current regression suite passed all 76 tests on Linux with Node 24.22.3 and Yarn 1.22.22. `build:code` passed type checking and the main, preload, and renderer builds.
+
+Tests cover attempts to open a fifth tab, closing a tab to make room, restoring a larger saved team in order while preserving its roster, and using only the first four shortcuts from older settings. Windows UI verification and four signed-in accounts remain in the [manual test plan](manual-test-plan.md#manual-test-matrix).
 
 ## Manual results reported by the maintainer
 

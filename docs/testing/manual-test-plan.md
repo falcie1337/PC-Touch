@@ -21,7 +21,7 @@ Report the action and the first relevant error. Passing this smoke test does not
 | T04 | Existing guest → another account, cancel, retry, close/reopen; retain the guest and return to the correct tab. | Full matrix pending; see H03 in the roadmap. |
 | T05 | Interleave two login attempts and complete them out of order; each result belongs to its originating attempt. | Popup simulations exist; full storage/PKCE integration pending. |
 | T06 | Two accounts in one window, grouped and in combat; select the tab whose character's turn begins. | Confirmed with two accounts. |
-| T07 | Four accounts; cycle, close/reorder, and reopen tabs while retaining the correct identity and selection. | Store tested; four live accounts pending. |
+| T07 | Open four tabs. The add button disappears and the new-tab shortcut keeps the same selection and order. Close one tab and open another. Repeat tab cycling and reordering with four signed-in accounts. | Store tested. Windows UI and four live accounts pending. |
 | T08 | Saved shortcuts and Ctrl+Tab/Shift+Tab with US and ABNT2 layouts; no unintended command while typing. | Existing arrow-key shortcuts confirmed; requested combinations pending. |
 | T09 | With background audio allowed, switch applications/minimize/restore without restarting the track. | Confirmed by maintainer. |
 | T10 | Test foreground-only audio and global/window mute options, including preference changes while unfocused. | Simulated tests passed; full manual matrix pending. |
@@ -51,7 +51,7 @@ Repeat with the window behind another window, minimized, and in the foreground. 
 
 ## Performance observations
 
-Compare versions on similar machines and scenarios. Record account count, resolution/scaling, map/activity, enabled mods, session length, and CPU/memory/GPU observations. Start with one, two, and four accounts; do not infer eight-account performance from a store-only test.
+Compare versions on similar machines and scenarios. Record account count, resolution/scaling, map/activity, enabled mods, session length, and CPU/memory/GPU observations. Start with one, two, and four accounts.
 
 Look for trends across close/reopen cycles rather than one memory reading. Record hangs, duplicated events, increasing usage, and when they begin. Choose performance targets only after gathering a baseline.
 

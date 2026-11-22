@@ -1,5 +1,5 @@
 import React from 'react'
-import { GameCharacter, GameCharacterSnapshot } from '@lindo/shared'
+import { GameCharacter, GameCharacterSnapshot, MAX_GAME_TABS } from '@lindo/shared'
 import { Button, Card, CardHeader, DialogActions, DialogContent, Grid, IconButton } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import CloseIcon from '@mui/icons-material/Close'
@@ -33,8 +33,10 @@ export const TeamWindowCard = ({ index, control, onRemove }: TeamWindowCardProps
     defaultValue: []
   })
   const { LL } = useI18nContext()
+  const canAddCharacter = fields.length < MAX_GAME_TABS
 
   const handleAddCharacter = (character: GameCharacter) => {
+    if (!canAddCharacter) return
     append(getSnapshot(character))
     toggleSelectCharacterDialog()
   }
@@ -69,7 +71,12 @@ export const TeamWindowCard = ({ index, control, onRemove }: TeamWindowCardProps
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={toggleSelectCharacterDialog} startIcon={<AddIcon />} size='small'>
+          <Button
+            disabled={!canAddCharacter}
+            onClick={toggleSelectCharacterDialog}
+            startIcon={<AddIcon />}
+            size='small'
+          >
             {LL.option.multiAccount.teamWindowCard.addCharacter()}
           </Button>
         </DialogActions>

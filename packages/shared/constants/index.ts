@@ -46,6 +46,8 @@ export const GITHUB_URL = 'https://github.com/prixe/lindo'
 export const MATRIX_URL = 'https://matrix.to/#/#lindo-official:matrix.org'
 export const REDDIT_URL = 'https://www.reddit.com/r/LindoApp/'
 
+export const MAX_GAME_TABS = 4
+
 export interface SaveCharacterImageArgs {
   image: string
   name: string

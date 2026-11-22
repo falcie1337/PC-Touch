@@ -3,6 +3,7 @@ const { test } = require('node:test')
 const path = require('node:path')
 const EventEmitter = require('eventemitter3')
 const { GameStoreModel } = require(path.join(process.env.LINDO_TEST_BUILD, 'game-store.js'))
+const { RootStoreModel } = require(path.join(process.env.LINDO_TEST_BUILD, 'root-store.js'))
 const { GameFightOptionModel } = require(path.join(process.env.LINDO_TEST_BUILD, 'fight-options.js'))
 const { NotificationsMod } = require(path.join(process.env.LINDO_TEST_BUILD, 'notifications.js'))
 
@@ -13,12 +14,50 @@ const createTabs = (count) => {
   return store
 }
 
-test('one window holds eight independent tabs and refuses a ninth without changing the current tabs', () => {
-  const store = createTabs(8)
+test('one window holds four tabs and closing a tab makes room for another', () => {
+  const store = createTabs(4)
+  store.selectGameIndex(1)
   const before = ids(store)
-  assert.equal(new Set(before).size, 8)
-  assert.throws(() => store.addGame(), /More than 8/)
+  assert.equal(new Set(before).size, 4)
+
+  store.addGame()
   assert.deepEqual(ids(store), before)
+  assert.equal(store.selectedGame.id, before[1])
+  assert.equal(store.canAddGame, false)
+
+  store.removeSelectedGame()
+  assert.equal(store.canAddGame, true)
+  store.addGame()
+  assert.equal(store.gamesOrder.length, 4)
+  assert.equal(store.canAddGame, false)
+})
+
+test('restoring a saved team opens its first four characters and keeps the saved roster', () => {
+  const characterIds = ['a', 'b', 'c', 'd', 'e', 'f']
+  const root = RootStoreModel.create({
+    optionStore: {
+      gameMultiAccount: {
+        characters: characterIds.map((id) => ({ id, name: id, account: 'test', password: 'unused' })),
+        teams: [{ id: 'team', name: 'Saved team', windows: [{ id: 'window', characters: characterIds }] }]
+      }
+    }
+  })
+
+  root.gameStore.gamesFromTeamWindow({ teamId: 'team', teamWindowId: 'window' })
+
+  assert.deepEqual(root.gameStore.gamesOrder.map((game) => game.character.id), ['a', 'b', 'c', 'd'])
+  const savedWindow = root.optionStore.gameMultiAccount.teams[0].windows[0]
+  assert.deepEqual(savedWindow.characters.map((character) => character.id), characterIds)
+})
+
+test('only the first four tab shortcuts are active for both new and existing profiles', () => {
+  const defaults = RootStoreModel.create({}).hotkeyStore.window
+  assert.deepEqual(defaults.tabShortcuts, ['F1', 'F2', 'F3', 'F4'])
+
+  const saved = ['F9', '', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8']
+  const old = RootStoreModel.create({ hotkeyStore: { window: { tabs: saved } } }).hotkeyStore.window
+  assert.deepEqual(old.tabShortcuts, ['F9', '', 'F3', 'F4'])
+  assert.deepEqual(old.tabs.slice(), saved)
 })
 
 test('next and previous tab wrap in both directions without reordering the four accounts', () => {

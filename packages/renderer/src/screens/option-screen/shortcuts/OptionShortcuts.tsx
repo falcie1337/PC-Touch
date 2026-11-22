@@ -71,26 +71,12 @@ export const OptionShortcuts = () => {
                   </Grid>
                   <Grid item xs={3}>
                     <Stack spacing={2}>
-                      {Array.from({ length: 4 }, (_, k) => k).map((i) => (
+                      {hotkeyStore.window.tabShortcuts.map((tabShortcut, i) => (
                         <ShortcutInput
                           id={'tab-' + i}
                           key={'tab-' + i}
                           label={LL.option.shortcuts.application.tab({ x: i + 1 })}
-                          value={hotkeyStore.window.tabs[i]}
-                          onChange={(shortcut) => hotkeyStore.window.setTab(shortcut, i)}
-                          restrictKeyCode
-                        />
-                      ))}
-                    </Stack>
-                  </Grid>
-                  <Grid item xs={3}>
-                    <Stack spacing={2}>
-                      {Array.from({ length: 4 }, (_, k) => k + 4).map((i) => (
-                        <ShortcutInput
-                          id={'tab-' + i}
-                          key={'tab-' + i}
-                          label={LL.option.shortcuts.application.tab({ x: i + 1 })}
-                          value={hotkeyStore.window.tabs[i]}
+                          value={tabShortcut}
                           onChange={(shortcut) => hotkeyStore.window.setTab(shortcut, i)}
                           restrictKeyCode
                         />

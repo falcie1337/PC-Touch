@@ -60,7 +60,7 @@ The OAuth popup uses a temporary per-request in-memory session. This is not comp
 - Separated automatic account-tab selection on combat turns from the optional request to bring the desktop window to the foreground.
 - Fixed a Windows/Node 24 Vite optimizer failure caused by generating a `node:test` directory name. The renderer already uses the preload API, so obsolete Node/Electron module bridges were removed.
 
-Eight-tab store behavior is covered by tests; live eight-account gameplay is not. The practical target is up to four accounts.
+The original repair tested the eight-tab store in isolation. The fork subsequently set the limit to four tabs per game window. See the [validation record](../testing/validation.md) for the current scope.
 
 ### Portraits and audio
 

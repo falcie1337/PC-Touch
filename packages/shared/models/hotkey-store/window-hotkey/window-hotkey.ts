@@ -1,4 +1,5 @@
 import { Instance, SnapshotOut, types } from 'mobx-state-tree'
+import { MAX_GAME_TABS } from '../../../constants'
 
 /**
  * Model description here for TypeScript hints.
@@ -12,8 +13,16 @@ export const WindowHotkeyModel = types
     nextTab: types.optional(types.string, 'CmdOrCtrl+Tab'),
     prevTab: types.optional(types.string, 'Shift+Tab'),
     activTab: types.optional(types.string, 'CmdOrCtrl+Tab'),
-    tabs: types.optional(types.array(types.string), ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8'])
+    tabs: types.optional(
+      types.array(types.string),
+      Array.from({ length: MAX_GAME_TABS }, (_, index) => `F${index + 1}`)
+    )
   })
+  .views((self) => ({
+    get tabShortcuts() {
+      return Array.from({ length: MAX_GAME_TABS }, (_, index) => self.tabs[index] ?? '')
+    }
+  }))
   .actions((self) => ({
     setNewTab(hotkey: string) {
       self.newTab = hotkey

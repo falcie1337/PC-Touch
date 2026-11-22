@@ -9,7 +9,8 @@ The current functional reference is `3.0.0-rc.12-repair.6`, through commit `7d67
 - Updated game asset endpoints, repaired cache recovery, and improved download handling.
 - Pinned the game bootstrap and restored desktop authentication callbacks without remote `eval` or a Windows protocol-handler dependency.
 - Adapted shortcuts to current game bars and delayed optional mods until native character initialization completes.
-- Expanded the tab store to eight entries and separated turn-based tab selection from desktop window focus.
+- Separated turn-based tab selection from desktop window focus.
+- Limited each game window to four tabs and four direct tab shortcuts. Larger saved teams open the first four characters in their saved order.
 - Repaired portraits, background audio, zaap filtering, and the party prospecting indicator.
 - Removed legacy analytics/statistics and abandoned upstream executable-update behavior.
 
