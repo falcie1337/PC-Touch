@@ -21,7 +21,6 @@ An item is complete when the implementation or investigation is finished, eviden
 - [x] Confirm two accounts, group play, and automatic turn-based tab selection on Windows.
 - [x] Confirm portraits, background audio, zaap search, party prospecting icon, and store.
 - [x] Add 74 regression tests and record the repair scope.
-- [ ] Publish the repaired state to the fork and record a maintainer reference commit.
 - [ ] Complete four-account, notification/window-focus, and long-session testing.
 - [ ] Modernize the runtime, security boundaries, CI, and distribution process.
 

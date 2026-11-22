@@ -23,9 +23,9 @@ The application store supports up to **eight tabs**, but that limit has not been
 
 The project has a regression suite with 74 tests. These cover application logic using controlled dependencies and simulated environments; they do not replace testing against the live game client.
 
-![Lindo interface screenshot from the original project](screenshots/lindo-ingame.png)
+![Lindo interface screenshot from the original project](screenshots/pc-touch-ingame.jpg)
 
-*Illustrative screenshot from the upstream project; it does not represent a current PC-Touch validation result.*
+*Screenshot from PC Touch/Lindo currently running on Windows 11; not representative of a final, fully working release.*
 
 ## Getting started
 
@@ -47,7 +47,7 @@ The game client is downloaded at runtime and stored in the application data dire
 
 ## Contributing and reports
 
-Bug reports and proposed changes are welcome through [GitHub Issues](https://github.com/falcie1337/PC-Touch/issues), when enabled. Check existing reports first and include the version or commit, platform, steps to reproduce, expected behavior, observed behavior, and sanitized logs. Never post passwords, cookies, OAuth codes, or access/refresh tokens. See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
+Bug reports and proposed changes are welcome through [GitHub Issues](https://github.com/falcie1337/PC-Touch/issues). Check existing reports first and include the version or commit, platform, steps to reproduce, expected behavior, observed behavior, and sanitized logs. Never post passwords, cookies, OAuth codes, or access/refresh tokens. See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
 
 The [roadmap](docs/project/roadmap.md) tracks maintenance priorities and candidate features. The existing auto-follow code is legacy behavior and has not been adapted or validated by this repair.
 
