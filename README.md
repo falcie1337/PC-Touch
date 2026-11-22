@@ -25,7 +25,7 @@ The regression suite covers application logic using controlled dependencies and 
 
 ![Lindo interface screenshot from the original project](screenshots/pc-touch-ingame.jpg)
 
-*Screenshot from PC Touch/Lindo currently running on Windows 11; not representative of a final, fully working release.*
+*Screenshot from PC-Touch/Lindo currently running on Windows 11; not representative of a final, fully working release.*
 
 ## Getting started
 
