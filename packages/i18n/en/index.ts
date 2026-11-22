@@ -205,7 +205,10 @@ const en: BaseTranslation = {
       fight: {
         header: 'Fight',
         healthBar: 'Activate life bar display below fighters',
-        focusFightTurn: 'Automatically switch to an account when its turn starts',
+        focusFightTurn: "Automatically select the character's tab when its turn starts",
+        foregroundFightTurn: "Bring Lindo to the foreground when a character's turn starts",
+        foregroundFightTurnHint:
+          'Leave this off to keep Lindo in the background. Turn alerts can be enabled under Notifications.',
         estimator: 'Show spell damage estimations in battle',
         fightChronometer: 'Show combat chronometer',
         monsterTooltip: 'Display monsters groups information on the map',

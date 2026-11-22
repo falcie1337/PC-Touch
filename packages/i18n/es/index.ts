@@ -206,7 +206,10 @@ const es: Translation = {
       fight: {
         header: 'Combate',
         healthBar: 'Activa la visualización de las barras de vida debajo de los luchadores.',
-        focusFightTurn: 'Cambiar automáticamente a una cuenta cuando inicia su turno',
+        focusFightTurn: 'Seleccionar automáticamente la pestaña del personaje cuando empieza su turno',
+        foregroundFightTurn: 'Traer Lindo al primer plano cuando empieza el turno de un personaje',
+        foregroundFightTurnHint:
+          'Desactiva esta opción para mantener Lindo en segundo plano. Los avisos de turno se configuran en Notificaciones.',
         estimator: 'Daño estimado de hechizo durante el combate',
         fightChronometer: 'Mostrar el cronómetro durante la pelea',
         monsterTooltip: 'Mostrar información del grupo de monstruos en el mapa',

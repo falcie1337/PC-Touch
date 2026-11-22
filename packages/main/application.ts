@@ -14,7 +14,7 @@ import getPort from 'get-port'
 import { Server } from 'http'
 import { observe } from 'mobx'
 import { AddressInfo } from 'net'
-import { APP_PATH, CHARACTER_IMAGES_PATH, GAME_PATH, LINDO_API } from './constants'
+import { APP_PATH, CHARACTER_IMAGES_PATH, GAME_PATH } from './constants'
 import fs from 'fs-extra'
 // @vite-ignore
 import originalFs from 'original-fs'
@@ -26,9 +26,9 @@ import path, { join } from 'path'
 import cors from 'cors'
 import { I18n } from './utils'
 import { logger, setupRendererLogger } from './logger'
-import axios from 'axios'
 import { Locales } from '@lindo/i18n'
 import { platform } from 'os'
+import { openWebAuthWindow } from './windows/auth-window'
 
 export class Application {
   private static _instance: Application
@@ -67,7 +67,7 @@ export class Application {
     serveGameServer.use('/character-images', express.static(CHARACTER_IMAGES_PATH))
     serveGameServer.use('/changelog', express.static(APP_PATH + '/CHANGELOG.md'))
     const gameServerPort = await getPort({ port: 3000 })
-    const gameServer: Server = serveGameServer.listen(gameServerPort)
+    const gameServer: Server = serveGameServer.listen(gameServerPort, '127.0.0.1')
 
     // set default language
     if (!rootStore.appStore._language) {
@@ -103,7 +103,7 @@ export class Application {
     this._setupIPCHandlers()
 
     // run updater
-    await runUpdater(this._rootStore, this._i18n)
+    await runUpdater(this._rootStore)
 
     // set the app menu
     this._setAppMenu()
@@ -150,16 +150,6 @@ export class Application {
     } else {
       this.createGameWindow()
     }
-    observe(
-      this._rootStore.optionStore.window,
-      'audioMuted',
-      () => {
-        for (const gWindow of this._gWindows) {
-          gWindow.setAudioMute(this._rootStore.optionStore.window.audioMuted)
-        }
-      },
-      true
-    )
   }
 
   private _setAppMenu() {
@@ -182,7 +172,7 @@ export class Application {
     const serverAddress: AddressInfo = this._gameServer.address() as AddressInfo
     const gWindow = await GameWindow.init({
       index,
-      url: 'http://localhost:' + serverAddress.port + '/renderer/index.html',
+      url: 'http://127.0.0.1:' + serverAddress.port + '/renderer/index.html',
       store: this._rootStore,
       team,
       teamWindow
@@ -212,14 +202,27 @@ export class Application {
     // logger handler
     setupRendererLogger()
 
+    ipcMain.handle(IPCEvents.OPEN_WEB_AUTH, (event, url: unknown) => {
+      const owner = this._gWindows.find((gameWindow) => gameWindow.id === event.sender.id)
+      const frame = event.senderFrame
+      if (
+        !owner ||
+        frame.processId !== event.sender.mainFrame.processId ||
+        frame.routingId !== event.sender.mainFrame.routingId
+      ) {
+        throw new Error('Invalid authentication request')
+      }
+      return openWebAuthWindow(owner.browserWindow, url as string)
+    })
+
     // handlers
     ipcMain.handle(IPCEvents.GET_GAME_CONTEXT, (event) => {
       const serverAddress: AddressInfo = this._gameServer.address() as AddressInfo
       const gWindow = this._gWindows.find((gWindow) => gWindow.id === event.sender.id)
       const context: GameContext = {
-        gameSrc: 'http://localhost:' + serverAddress.port + '/game/index.html?delayed=true',
-        characterImagesSrc: 'http://localhost:' + serverAddress.port + '/character-images/',
-        changeLogSrc: 'http://localhost:' + serverAddress.port + '/changelog',
+        gameSrc: 'http://127.0.0.1:' + serverAddress.port + '/game/index.html?delayed=true',
+        characterImagesSrc: 'http://127.0.0.1:' + serverAddress.port + '/character-images/',
+        changeLogSrc: 'http://127.0.0.1:' + serverAddress.port + '/changelog',
         windowId: event.sender.id,
         multiAccount: gWindow?.multiAccount,
         hash: this._hash,
@@ -273,15 +276,8 @@ export class Application {
       }
     })
 
-    ipcMain.handle(IPCEvents.FETCH_GAME_CONTEXT, (event, context: string) => {
-      logger.debug('Application -> FETCH_GAME_CONTEXT')
-      return axios
-        .post(LINDO_API + 'stats/stats.php', context)
-        .then((res) => {
-          return !!res.data
-        })
-        .catch(() => true)
-    })
+    // Keep the legacy IPC response without submitting game context to the old website.
+    ipcMain.handle(IPCEvents.FETCH_GAME_CONTEXT, () => true)
 
     ipcMain.on(IPCEvents.AUDIO_MUTE_WINDOW, (event, value) => {
       logger.debug('Application -> AUDIO_MUTE_WINDOW')

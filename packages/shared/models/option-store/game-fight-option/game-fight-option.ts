@@ -11,6 +11,7 @@ export const GameFightOptionModel = types
     verticalTimeline: types.optional(types.boolean, false),
     challengeBonus: types.optional(types.boolean, false),
     focusOnFightTurn: types.optional(types.boolean, true),
+    bringToFrontOnFightTurn: types.optional(types.boolean, false),
     fightChronometer: types.optional(types.boolean, true),
     monsterTooltip: types.optional(types.boolean, true)
   })
@@ -29,6 +30,9 @@ export const GameFightOptionModel = types
     },
     setFocusOnFightTurn(value: boolean) {
       self.focusOnFightTurn = value
+    },
+    setBringToFrontOnFightTurn(value: boolean) {
+      self.bringToFrontOnFightTurn = value
     },
     setFightChronometer(value: boolean) {
       self.fightChronometer = value

@@ -15,6 +15,7 @@ export class PartyInfoMod extends Mod {
   private container?: HTMLDivElement
   private readonly settingDisposer: () => void
   private readonly eventManager = new EventManager()
+  private refreshTimer?: number
 
   private get _option() {
     return this.rootStore.optionStore.gameGroup
@@ -36,50 +37,51 @@ export class PartyInfoMod extends Mod {
       window.lindoAPI.logger.info('- enable PartyInfo')()
 
       this.partyInitialized = this.wGame.document.querySelector('#party-info-container') !== null
-      setTimeout(() => {
-        this.updatePartyInfo()
-      }, 100)
+      this.scheduleUpdate()
       this.eventManager.on<ConnectionManagerEvents, 'PartyJoinMessage'>(
         this.wGame.dofus.connectionManager,
         'PartyJoinMessage',
-        this.updatePartyInfo.bind(this)
+        this.scheduleUpdate
       )
       this.eventManager.on<ConnectionManagerEvents, 'PartyUpdateMessage'>(
         this.wGame.dofus.connectionManager,
         'PartyUpdateMessage',
-        this.updatePartyInfo.bind(this)
+        this.scheduleUpdate
       )
       this.eventManager.on<ConnectionManagerEvents, 'PartyMemberEjectedMessage'>(
         this.wGame.dofus.connectionManager,
         'PartyMemberEjectedMessage',
-        this.updatePartyInfo.bind(this)
+        this.scheduleUpdate
       )
       this.eventManager.on<ConnectionManagerEvents, 'PartyMemberRemoveMessage'>(
         this.wGame.dofus.connectionManager,
         'PartyMemberRemoveMessage',
-        this.updatePartyInfo.bind(this)
+        this.scheduleUpdate
       )
       this.eventManager.on<ConnectionManagerEvents, 'PartyNewMemberMessage'>(
         this.wGame.dofus.connectionManager,
         'PartyNewMemberMessage',
-        this.updatePartyInfo.bind(this)
-      )
-      this.eventManager.on<ConnectionManagerEvents, 'PartyUpdateMessage'>(
-        this.wGame.dofus.connectionManager,
-        'PartyUpdateMessage',
-        this.updatePartyInfo.bind(this)
+        this.scheduleUpdate
       )
       this.eventManager.on<ConnectionManagerEvents, 'PartyNewGuestMessage'>(
         this.wGame.dofus.connectionManager,
         'PartyNewGuestMessage',
-        this.updatePartyInfo.bind(this)
+        this.scheduleUpdate
       )
       this.eventManager.on<ConnectionManagerEvents, 'PartyLeaderUpdateMessage'>(
         this.wGame.dofus.connectionManager,
         'PartyLeaderUpdateMessage',
-        this.updatePartyInfo.bind(this)
+        this.scheduleUpdate
       )
     }
+  }
+
+  private scheduleUpdate = () => {
+    this.wGame.clearTimeout(this.refreshTimer)
+    this.refreshTimer = this.wGame.setTimeout(() => {
+      this.refreshTimer = undefined
+      this.updatePartyInfo()
+    }, 0)
   }
 
   // Initialize party info container
@@ -120,11 +122,17 @@ export class PartyInfoMod extends Mod {
 
     if (this._option.groupProspecting) {
       const prospectionContainerElement = this.wGame.document.createElement('div')
-      const prospectionImageElement = this.wGame.document.createElement('img')
+      const prospectionImageElement = this.wGame.document.createElement('span')
       const prospectionTextElement = this.wGame.document.createElement('span')
 
-      prospectionImageElement.src = './assets/ui/icons/prospecting.png'
-      prospectionImageElement.setAttribute('style', 'height: 1em; vertical-align: middle;')
+      // Native game CSS resolves this icon through the current versioned CDN URL.
+      prospectionImageElement.className = 'iconProspecting'
+      prospectionImageElement.setAttribute('role', 'img')
+      prospectionImageElement.setAttribute('aria-label', 'PP')
+      prospectionImageElement.setAttribute(
+        'style',
+        'display: inline-block; width: 1em; height: 1em; vertical-align: middle; background-size: contain; background-repeat: no-repeat; background-position: center;'
+      )
       prospectionContainerElement.appendChild(prospectionImageElement)
       prospectionContainerElement.setAttribute('style', 'font-size: 13px;user-select: none;cursor: default;')
 
@@ -165,6 +173,8 @@ export class PartyInfoMod extends Mod {
   }
 
   private _stop() {
+    this.wGame.clearTimeout(this.refreshTimer)
+    this.refreshTimer = undefined
     this.partyInitialized = false
     if (this.container && this.container.parentElement) {
       this.container.parentElement.removeChild(this.container)

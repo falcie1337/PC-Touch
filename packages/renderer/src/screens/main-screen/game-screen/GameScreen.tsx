@@ -4,7 +4,8 @@ import { useStores } from '@/store'
 import { Game } from '@/store/game-store/game'
 import { useI18nContext } from '@lindo/i18n'
 import { reaction } from 'mobx'
-import React, { memo, useEffect, useRef } from 'react'
+import React, { memo, useEffect, useRef, useState } from 'react'
+import { Alert } from '@mui/material'
 import { useGameManager } from './use-game-manager'
 
 export interface GameScreenProps {
@@ -22,12 +23,14 @@ export const GameScreen = memo(({ game }: GameScreenProps) => {
     LL
   })
   const iframeGameRef = useRef<HTMLIFrameElementWithDofus>(null)
+  const [loadError, setLoadError] = useState<string>()
+  const gameId = game.id
 
   useEffect(() => {
     return reaction(
       () => rootStore.gameStore.selectedGame,
       (selectedGame) => {
-        if (selectedGame?.id === game.id) {
+        if (selectedGame?.id === gameId) {
           setTimeout(() => {
             iframeGameRef.current?.focus()
           }, 100)
@@ -63,14 +66,37 @@ export const GameScreen = memo(({ game }: GameScreenProps) => {
         return results.pop()
       }
 
-      // can't use SQL Database in modern iframe
-      gameWindow.openDatabase = undefined
-      gameWindow.initDofus(() => {
-        window.lindoAPI.logger.info('initDofus done')()
-        gameManager.init(gameWindow)
-      })
+      const reportError = (error: unknown) => {
+        const message = error instanceof Error ? error.message : String(error)
+        window.lindoAPI.logger.error('Game startup failed', message)()
+        setLoadError(message)
+      }
+      const handleStartupError = (event: ErrorEvent) => reportError(event.message)
+      gameWindow.addEventListener('error', handleStartupError, { once: true })
+      try {
+        if (typeof gameWindow.initDofus !== 'function')
+          throw new Error('The game bootstrap did not load. Restart Lindo to repair the game files.')
+        // WebSQL is unavailable in modern iframes. Keep native IndexedDB available.
+        gameWindow.openDatabase = undefined
+        gameWindow.lindoAuth = { open: (url) => window.lindoAPI.openWebAuth(url) }
+        gameWindow.initDofus(() => {
+          // Later runtime errors must not unmount the entire game and its login screen.
+          gameWindow.removeEventListener('error', handleStartupError)
+          try {
+            window.lindoAPI.logger.info('initDofus done')()
+            gameManager.init(gameWindow)
+          } catch (error) {
+            reportError(error)
+          }
+        })
+      } catch (error) {
+        gameWindow.removeEventListener('error', handleStartupError)
+        reportError(error)
+      }
     }
   }
+
+  if (loadError) return <Alert severity='error'>Lindo could not start the game: {loadError}</Alert>
 
   return (
     <iframe

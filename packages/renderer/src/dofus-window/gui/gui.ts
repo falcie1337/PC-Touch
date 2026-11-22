@@ -17,6 +17,13 @@ export interface Slot extends TypedEmitter<SlotEvents> {
   tap: () => void
 }
 
+export interface ShortcutBar {
+  _panels: {
+    spell: { slotList: Array<Slot> }
+    item: { slotList: Array<Slot> }
+  }
+}
+
 export interface GUICanvas {
   rootElement: HTMLCanvasElement
 }
@@ -120,14 +127,11 @@ export interface GUI extends TypedEmitter<GUIEvents> {
       }
     }
   }
-  shortcutBar: {
-    _panels: {
-      spell: {
-        slotList: Array<Slot>
-      }
-      item: {
-        slotList: Array<Slot>
-      }
+  shortcutBar?: ShortcutBar
+  shortcutBarManager?: {
+    shortcutBars: {
+      playerBar?: ShortcutBar
+      heroBar?: ShortcutBar
     }
   }
   playerData: PlayerData
@@ -158,6 +162,9 @@ export interface GUI extends TypedEmitter<GUIEvents> {
   party: Party
   wBody: {
     _childrenList: Array<GUIWindow>
+    rootElement: HTMLElement
+    appendChild: <T extends { rootElement: HTMLElement }>(child: T) => T
+    removeChild: <T extends { rootElement: HTMLElement }>(child: T) => T
   }
   npcDialogUi: {
     npcName: string

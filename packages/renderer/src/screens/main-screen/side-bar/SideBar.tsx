@@ -69,8 +69,8 @@ export const SideBar = () => {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
 
-    if (active.id !== over?.id) {
-      gameStore.moveGame(active.id as string, over!.id as string)
+    if (over && active.id !== over.id) {
+      gameStore.moveGame(active.id as string, over.id as string)
     }
   }
 

@@ -24,7 +24,7 @@ export const TabGame = styled(({ game, className }: TabGameProps) => {
   useEffect(() => {
     const updateCharIcon = () => {
       if (characterIconRef.current && game.characterIcon) {
-        characterIconRef.current.appendChild(game.characterIcon)
+        characterIconRef.current.replaceChildren(game.characterIcon)
         characterIconRef.current.style.display = 'block'
       } else if (characterIconRef.current) {
         characterIconRef.current.innerHTML = ''

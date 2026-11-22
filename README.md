@@ -1,157 +1,76 @@
-# Lindo
+# PC-Touch
 
-[![Build & Publish](https://github.com/prixe/lindo/actions/workflows/build.yml/badge.svg)](https://github.com/prixe/lindo/actions/workflows/build.yml)
-[![Current release](https://badgen.net/github/release/prixe/lindo)](https://github.com/prixe/lindo/releases/latest)
-[![Compatible os](https://badgen.net/badge/os/windows%20%7C%20macOS%20%7C%20linux/black)](https://github.com/prixe/lindo/releases/latest)
-[![Minimum node](https://img.shields.io/badge/node-%3E%3D%2016.0.0-green.svg)]()
-[![Github All Releases](https://img.shields.io/github/downloads/prixe/lindo/total.svg)](https://github.com/prixe/lindo/releases)
-[![Contributors](https://img.shields.io/github/contributors/prixe/lindo.svg)](https://github.com/prixe/lindo/graphs/contributors)
-[![Website lindo-app.com](https://img.shields.io/website-up-down-green-red/http/shields.io.svg)](https://lindo-app.com)
+[![License: GPL-3.0](https://img.shields.io/github/license/falcie1337/PC-Touch)](LICENSE)
+![Platform: Windows x64](https://img.shields.io/badge/platform-Windows%20x64-blue)
+![Status: Experimental](https://img.shields.io/badge/status-experimental-orange)
 
-![Lindo in game screenshot](./screenshots/lindo-ingame.png)
+**PC-Touch is a community-maintained desktop client for DOFUS Touch, based on the open-source [Lindo No-Emu](https://github.com/prixe/lindo) project.** This fork focuses on restoring compatibility with the current game client and maintaining a usable multi-tab desktop client.
 
-## Links
-Official [WebSite](https://lindo-app.com) 
+> **Experimental software.** The current reference build is `3.0.0-rc.12-repair.6`. It has been manually exercised on Windows 11 x64 with two accounts. The repository currently provides source code; no distributable installer or portable build has been validated.
 
-Find us on Reddit to exchange with the community!
+PC-Touch is the repository and fork name. The application still identifies itself as **Lindo** in this revision. This fork is independent of Ankama and is not an official client.
 
-- [Reddit](https://www.reddit.com/r/LindoApp/)
+## Project status
 
-We are also on Twitter, Telegram and Matrix if you want to get notified of new updates:
+The following behavior has been confirmed by the maintainer on Windows 11 x64:
 
-- [Twitter](https://twitter.com/Lindo_Officiel)
-- [Matrix](https://matrix.to/#/#lindo-official:matrix.org) (chat server like discord)
-- [Telegram](https://t.me/+8jEjvFd5M-g4NTc0)
+- Game update, startup, guest and Ankama login, character selection, and map entry.
+- Two accounts in one window, including group play and combat.
+- Manual tab switching and automatic tab selection at the start of a character's combat turn.
+- Tab portraits, background audio, zaap search, the party prospecting icon, and the in-game store.
 
+The application store supports up to **eight tabs**, but that limit has not been validated with eight active accounts. The initial target for regular use is up to four accounts. Four-account sessions, long sessions, saved-account login, and the complete notification/window-focus settings matrix remain unverified. See the [validation record](docs/testing/validation.md) for evidence and limits.
 
-**⚠️ Dofus Touch is the entire property of Ankama Games, and we are not affiliated with Ankama. None of the files hosted in this repository are under copyright: They come from Open Source projects, libraries, the original DofusTouch No-Emu created by Daniel & Thomas and the work of direct contributors. We do not intend to cause any harm to Ankama Games and will never take any revenue from this project.**
+The project has a regression suite with 74 tests. These cover application logic using controlled dependencies and simulated environments; they do not replace testing against the live game client.
 
-**Keep in mind that Lindo doesn't officially respect the TOU (also known as CGU, Conditions Générales d'Utilisation in french) of Dofus Touch, use it at your own risk.**
+![Lindo interface screenshot from the original project](screenshots/lindo-ingame.png)
 
-## Supported Platform
-Lindo No-Emu works on :
-- **Windows** 10 and newer (ia32/amd64/arm64)
-- **macOS** 10.9 and newer
-- **Linux** (Debian >= 9, Ubuntu >= 18) (amd64)
+*Illustrative screenshot from the upstream project; it does not represent a current PC-Touch validation result.*
 
-## Table of contents
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+## Getting started
 
-- [Installation](#installation)
-- [Issues](#issues)
-  - [Run the arm64 mac os version for M1/M2 processors](#run-the-arm64-mac-os-version-for-m1m2-processors)
-- [Development](#development)
-  - [Install the project](#install-the-project)
-  - [Debug](#debug)
-  - [Build the project](#build-the-project)
-  - [Directory structure](#directory-structure)
-  - [`dependencies` vs `devDependencies`](#dependencies-vs-devdependencies)
-    - [How to help ?](#how-to-help-)
-    - [Generate the Table of Content](#generate-the-table-of-content)
+There is no ready-to-run binary yet. The [tester quick-start](docs/testing/readme.txt) describes the current Windows x64 source-run procedure. It is for testing, not a supported release installation. See the [manual test plan](docs/testing/manual-test-plan.md) for test scope.
 
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+## Repository map
 
-# Installation
-Download the latest version of Lindo No-Emu from [Github](https://github.com/prixe/lindo/releases/latest) for your platform.
+| Path | Contents |
+| --- | --- |
+| `packages/main` | Electron main process, application windows, local server, updater, and persistence. |
+| `packages/preload` | The `window.lindoAPI` bridge exposed to renderer contexts. |
+| `packages/renderer` | React interface, tabs, preferences, game integration, and optional mods. |
+| `packages/shared` | Shared models, settings, shortcut definitions, and IPC event types. |
+| `packages/i18n` | Lindo interface translations and generated localization types. |
+| `tests` and `scripts` | Regression tests and development/build tooling. |
+| `docs` | Project roadmap, test records, and repair history. |
 
-- Windows
-  - `Lindo.${version}.exe` : Portable executable version 
-  - `Lindo.Setup.${version}.exe` : Installer version
-  - `Lindo.${version}-win.zip` : Portable zip version
-- MacOS
-  - `Lindo-${version}.dmg` : Version for intel mac
-  - `Lindo-${version}-arm64.dmg` : Version for arm mac (M1/M2) (see [Run the arm64 mac os version for M1/M2 processors](#run-the-arm64-mac-os-version-for-m1m2-processors))
-- Linux
-  - `Lindo-${version}.AppImage` : AppImage version
-  - `lindo-${version}.tar.gz` : Portable tar.gz version
-  - `lindo_${version}_amd64.deb` : Debian version
+The game client is downloaded at runtime and stored in the application data directory. It is not included in this repository. Generated output, `node_modules`, account profiles, tokens, and game assets do not belong in source commits.
 
-# Issues
-## Run the arm64 mac os version for M1/M2 processors
-![Issue with arm64 build](./screenshots/arm64-issue.png)
-- Drop the **Lindo.app** into your `/Applications` folder
-- Then open the `Terminal` application and run the following command:
-```bash
-$ xattr -d com.apple.quarantine /Applications/Lindo.app
-```
+## Contributing and reports
 
-# Development
+Bug reports and proposed changes are welcome through [GitHub Issues](https://github.com/falcie1337/PC-Touch/issues), when enabled. Check existing reports first and include the version or commit, platform, steps to reproduce, expected behavior, observed behavior, and sanitized logs. Never post passwords, cookies, OAuth codes, or access/refresh tokens. See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
 
-## Install the project
-```sh
-$ git clone https://github.com/prixe/lindo.git
-$ cd lindo
-# install dependencies
-$ yarn install
-```
-## Debug
+The [roadmap](docs/project/roadmap.md) tracks maintenance priorities and candidate features. The existing auto-follow code is legacy behavior and has not been adapted or validated by this repair.
 
-Start the application in debug mode
-```sh
-# start the application
-$ yarn dev
-# or from the vs code, launch -> Debug App
-```
+## Compatibility
 
-## Build the project
+| Platform | Status in this fork |
+| --- | --- |
+| Windows 11 x64 | Initial manual test platform. Two-account gameplay has been confirmed. |
+| Linux | The upstream project contains Linux build configuration, but this fork has not been revalidated on Linux. |
+| Other Windows versions, Windows ARM64, and macOS | Not currently validated by this fork. |
 
-Build the production artefact for your current platform
-```sh
-$ yarn build
-```
+## Project links
 
-## Directory structure
+- [Roadmap](docs/project/roadmap.md)
+- [Manual test plan](docs/testing/manual-test-plan.md)
+- [Validation record](docs/testing/validation.md)
+- [Repair report and file inventory](docs/history/repair-report.md)
+- [Changelog](CHANGELOG.md)
+- [License](LICENSE)
+- [Original Lindo repository](https://github.com/prixe/lindo)
 
-Once `dev` or `build` npm-script is executed, the `dist` folder will be generated. It has the same structure as the `packages` folder, the purpose of this design is to ensure the correct path calculation.
+## Disclaimer and licensing
 
-```tree
-├── build                     Resources for the production build
-|   ├── icon.icns             Icon for the application on macOS
-|   ├── icon.ico              Icon for the application
-|   ├── installerIcon.ico     Icon for the application installer
-|   └── uninstallerIcon.ico   Icon for the application uninstaller
-|
-├── dist                      Generated after build according to the "packages" directory
-|   ├── main                  Source for the main process of electron
-|   ├── preload               Source for the preload process of electron
-|   ├── renderer              Source for the webview (React Application)
-|   └── shared                Shared files between the main and renderer process
-|
-├── release                   Generated after production build, contains executables
-|   └──{version}
-|       ├── win-unpacked      Contains unpacked application executable
-|       └── Setup.exe         Installer for the application
-|
-├── scripts
-|   ├── build.mjs             Develop script -> npm run build
-|   └── watch.mjs             Develop script -> npm run dev
-|
-├── packages
-|   ├── i18n                  Localization source code
-|   ├── main                  Main-process source code
-|   |   └── vite.config.ts
-|   ├── preload               Preload-script source code
-|   |   └── vite.config.ts
-|   ├── renderer              Renderer-process source code
-|   |   └── vite.config.ts
-|   └── shared                Shared files between the main,renderer and preload process
-```
+DOFUS Touch, Ankama names, and game assets belong to their respective owners. PC-Touch is not affiliated with or endorsed by Ankama. Ankama's current [device and client policy](https://support.ankama.com/hc/en-us/articles/26840828168209-What-devices-can-I-play-DOFUS-Touch-on) may prohibit modified clients; review the official terms and policies before using this software. The GPL license for this repository does not grant permission to use the game or override Ankama's rules.
 
-## `dependencies` vs `devDependencies`
-
-- First, you need to know if your dependencies are needed after the application is packaged.
-
-- Like [electron-store](https://www.npmjs.com/package/electron-store), [fs-extra](https://www.npmjs.com/package/fs-extra) they are node-native modules and should be placed in `dependencies`. In addition, Vite will not build them, but treat them as external modules.
-
-- Dependencies like [MUI](https://mui.com) and [React](https://www.npmjs.com/package/react), which are pure javascript modules that can be built with Vite, can be placed in `devDependencies`. This reduces the size of the application.
-
-### How to help ?
-You can contact a senior developer of the project as [Clover](https://github.com/Clover-Lindo) or [Zenoxs](https://github.com/zenoxs).
-Then you can create a pull request to add or fix features, you can also submit improvement idea or bug issue in the [issues section](https://github.com/prixe/lindo/issues).
-
-### Generate the Table of Content
-If you edit the README.MD you wanna update the table of contents you can easily achieve it by using this command :
-```sh
-$ npx doctoc README.md
-```
+This repository retains the original [GPL-3.0](LICENSE) license and upstream attribution. Third-party dependencies and assets remain subject to their respective licenses and terms. The repair work is not a security audit.

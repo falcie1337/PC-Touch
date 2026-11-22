@@ -1,21 +1,21 @@
 import { RootStore } from '@lindo/shared'
-import { dialog } from 'electron'
+import { app, dialog } from 'electron'
 import { logger } from '../logger'
-import { I18n } from '../utils'
-import { AppUpdater } from './app-updater'
 import { GameUpdater } from './game-updater'
 
-export const runUpdater = async (rootStore: RootStore, i18n: I18n) => {
-  const appUpdater = await AppUpdater.init(rootStore, i18n)
-  await appUpdater.run().catch((err) => {
-    logger.error('Error running app updater:', err)
-  })
+export const runUpdater = async (rootStore: RootStore) => {
+  rootStore.appStore.setLindoVersion(app.getVersion())
+  // Source builds must not replace themselves with binaries from the abandoned upstream.
 
   logger.info('runUpdater -> Start game update checking...')
   const gameUpdater = await GameUpdater.init(rootStore)
-  await gameUpdater.run().catch((e) => {
-    console.log(e)
-    dialog.showErrorBox('Error', 'Failed to update game')
-  })
+  try {
+    await gameUpdater.run()
+  } catch (error) {
+    logger.error('Game update failed:', error)
+    const message = error instanceof Error ? error.message : String(error)
+    dialog.showErrorBox('Lindo — game update failed', message)
+    throw error
+  }
   logger.info('runUpdater -> done')
 }

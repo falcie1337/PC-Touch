@@ -10,7 +10,8 @@ import {
   LindoTitleBar,
   RootStoreSnapshot,
   SaveCharacterImageArgs,
-  UpdateProgress
+  UpdateProgress,
+  WebAuthResult
 } from '@lindo/shared'
 import { Titlebar, Color } from 'custom-electron-titlebar'
 ;(async () => {
@@ -157,6 +158,8 @@ const focusCurrentWindow = (): void => {
   ipcRenderer.send(IPCEvents.FOCUS_WINDOW)
 }
 
+const openWebAuth = (url: string): Promise<WebAuthResult> => ipcRenderer.invoke(IPCEvents.OPEN_WEB_AUTH, url)
+
 const closeOptionWindow = (): void => {
   ipcRenderer.send(IPCEvents.CLOSE_OPTION)
 }
@@ -278,6 +281,7 @@ const lindoApi: LindoAPI = {
   focusCurrentWindow,
   closeOptionWindow,
   setAudioMuteWindow,
+  openWebAuth,
   saveMasterPassword,
   isMasterPasswordConfigured,
   saveCharacterImage,

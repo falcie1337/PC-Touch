@@ -1,5 +1,5 @@
 import React from 'react'
-import { Box, Checkbox, FormControl, FormControlLabel } from '@mui/material'
+import { Box, Checkbox, FormControl, FormControlLabel, FormHelperText } from '@mui/material'
 import { Observer } from 'mobx-react-lite'
 import { useI18nContext } from '@lindo/i18n'
 import { useStores } from '@/store'
@@ -36,6 +36,16 @@ export const OptionFightFeatures = () => {
                 checked={optionStore.gameFight.focusOnFightTurn}
                 onChange={(_, checked) => optionStore.gameFight.setFocusOnFightTurn(checked)}
               />
+            </FormControl>
+            <FormControl fullWidth>
+              <FormControlLabel
+                control={<Checkbox />}
+                label={LL.option.features.fight.foregroundFightTurn()}
+                checked={optionStore.gameFight.bringToFrontOnFightTurn}
+                disabled={!optionStore.gameFight.focusOnFightTurn}
+                onChange={(_, checked) => optionStore.gameFight.setBringToFrontOnFightTurn(checked)}
+              />
+              <FormHelperText>{LL.option.features.fight.foregroundFightTurnHint()}</FormHelperText>
             </FormControl>
             <FormControl fullWidth>
               <FormControlLabel

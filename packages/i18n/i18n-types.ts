@@ -648,9 +648,17 @@ type RootTranslation = {
 				 */
 				healthBar: string
 				/**
-				 * Automatically switch to an account when its turn starts
+				 * Automatically select the character's tab when its turn starts
 				 */
 				focusFightTurn: string
+				/**
+				 * Bring Lindo to the foreground when a character's turn starts
+				 */
+				foregroundFightTurn: string
+				/**
+				 * Leave this off to keep Lindo in the background. Turn alerts can be enabled under Notifications.
+				 */
+				foregroundFightTurnHint: string
 				/**
 				 * Show spell damage estimations in battle
 				 */
@@ -1719,9 +1727,17 @@ export type TranslationFunctions = {
 				 */
 				healthBar: () => LocalizedString
 				/**
-				 * Automatically switch to an account when its turn starts
+				 * Automatically select the character's tab when its turn starts
 				 */
 				focusFightTurn: () => LocalizedString
+				/**
+				 * Bring Lindo to the foreground when a character's turn starts
+				 */
+				foregroundFightTurn: () => LocalizedString
+				/**
+				 * Leave this off to keep Lindo in the background. Turn alerts can be enabled under Notifications.
+				 */
+				foregroundFightTurnHint: () => LocalizedString
 				/**
 				 * Show spell damage estimations in battle
 				 */

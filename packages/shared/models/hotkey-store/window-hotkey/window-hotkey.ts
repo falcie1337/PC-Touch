@@ -9,8 +9,8 @@ export const WindowHotkeyModel = types
     newTab: types.optional(types.string, 'CmdOrCtrl+T'),
     closeTab: types.optional(types.string, 'CmdOrCtrl+W'),
     newWindow: types.optional(types.string, 'CmdOrCtrl+N'),
-    nextTab: types.optional(types.string, 'Down'),
-    prevTab: types.optional(types.string, 'Up'),
+    nextTab: types.optional(types.string, 'CmdOrCtrl+Tab'),
+    prevTab: types.optional(types.string, 'Shift+Tab'),
     activTab: types.optional(types.string, 'CmdOrCtrl+Tab'),
     tabs: types.optional(types.array(types.string), ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8'])
   })

@@ -5,13 +5,28 @@ import { observe } from 'mobx'
 import { EventManager } from '../helpers'
 import { Mod } from '../mod'
 
-export class ZaapSearchFilterMod extends Mod {
-  private styleTag?: HTMLStyleElement
-  private zaapSearchContainer?: HTMLDivElement
-  private zaapSearchInput?: HTMLInputElement
+interface SearchFilter {
+  body: HTMLElement
+  panels: HTMLElement
+  container: HTMLDivElement
+  input: HTMLInputElement
+  observer: MutationObserver
+  originalDisplay: Map<HTMLElement, string>
+  onInput: () => void
+}
 
+const normalizeSearch = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+
+export class ZaapSearchFilterMod extends Mod {
   private readonly eventManager = new EventManager()
   private readonly settingDisposer: () => void
+  private readonly filters = new Map<HTMLElement, SearchFilter>()
+  private styleTag?: HTMLStyleElement
+  private pending?: number
 
   constructor(wGame: DofusWindow, rootStore: RootStore, LL: TranslationFunctions) {
     super(wGame, rootStore, LL)
@@ -19,553 +34,127 @@ export class ZaapSearchFilterMod extends Mod {
       this.rootStore.optionStore.gameGeneral,
       'zaapSearchFilter',
       () => {
+        this.stop()
         if (this.rootStore.optionStore.gameGeneral.zaapSearchFilter) this.start()
-        else this.stop()
       },
       true
     )
   }
 
-  private start(): void {
-    window.lindoAPI.logger.info('- enable ZaapSearchFilter')()
-
-    this.eventManager.on(this.wGame.dofus.connectionManager, 'ZaapListMessage', () => {
-      this.createSearchFilter()
-    })
-
-    this.eventManager.on(this.wGame.dofus.connectionManager, 'TeleportDestinationsListMessage', (arg) => {
-      if (arg.teleporterType === 1) {
-        this.createSearchFilterZaapi()
-      }
-    })
-
-    this.eventManager.on(this.wGame.dofus.connectionManager, 'TeleportDestinationsListMessage', (arg) => {
-      if (arg.teleporterType === 2) {
-        // Merci TonTonJS
-        this.createSearchFilterPrisme()
-      }
-    })
-
-    this.eventManager.on(this.wGame.dofus.connectionManager, 'LeaveDialogMessage', () => {
-      this.resetSearchFilter()
-    })
-    const favorite = localStorage.getItem('zaapFav')
-    if (favorite == null || favorite === '') {
-      localStorage.setItem('zaapFav', '')
-    }
+  private start() {
+    this.eventManager.on(this.wGame.dofus.connectionManager, 'ZaapListMessage', this.scheduleUpdate)
+    this.eventManager.on(this.wGame.dofus.connectionManager, 'TeleportDestinationsListMessage', this.scheduleUpdate)
+    this.eventManager.on(this.wGame.dofus.connectionManager, 'LeaveDialogMessage', this.resetSearchFilters)
   }
 
-  // Zaap
-  private createSearchFilter(): void {
-    this.injectInputInDom()
-    this.addFavInDom()
-
-    this.zaapSearchInput!.addEventListener('keyup', () => {
-      const zaapWanted = this.zaapSearchInput!.value.toLowerCase()
-
-      const zaapList = this.wGame.document
-        .getElementsByClassName('lindo_zaapBodyHeight__custom')[0]
-        .getElementsByClassName('row') as HTMLCollectionOf<HTMLDivElement>
-
-      for (const currentZaap of zaapList) {
-        const destination = currentZaap.getElementsByClassName('destinationName')
-
-        if (!destination.length) {
-          continue
-        }
-
-        currentZaap.style.display = 'none'
-
-        if (currentZaap.innerText.toLowerCase().includes(zaapWanted)) {
-          currentZaap.style.display = 'block'
-        }
-      }
-    })
+  private scheduleUpdate = () => {
+    this.wGame.clearTimeout(this.pending)
+    // Native handlers must populate the teleporter window before adding its search field.
+    this.pending = this.wGame.setTimeout(() => {
+      this.pending = undefined
+      this.updateSearchFilters()
+    }, 0)
   }
 
-  private injectInputInDom(): void {
-    this.styleTag = this.wGame.document.createElement('style')
-    this.wGame.document.getElementsByTagName('head')[0].appendChild(this.styleTag)
-
-    this.styleTag.innerHTML += `
-        .lindo_zaapBodyHeight__custom{
-            height: 70% !important;
-        }
-
-        .lindo_zaapSearch__container{
-            padding: 10px;
-            width: 100%;
-        }
-
-        .lindo_zaapSearch__input{
-            text-align: center;
-            width: 96%;
-            margin-right: 10px;
-            background-color: #424242;
-            border-radius: 5px;
-            color: white;
-            border-color: #262626;
-            height: 34px;
-            font-size: 1em;
-        }
+  private updateSearchFilters() {
+    const doc = this.wGame.document
+    const bodies = doc.querySelectorAll<HTMLElement>(
+      '.teleporterListWindow .zaapBody, .teleporterListWindow .subwayBody'
+    )
+    for (const body of bodies) {
+      const panels = body.querySelector<HTMLElement>('.panels')
+      if (!panels) continue
+      const existing = this.filters.get(body)
+      if (existing && existing.panels === panels) {
+        this.applyFilter(existing)
+        continue
+      }
+      if (existing) this.removeFilter(existing)
+      if (!this.styleTag) {
+        this.styleTag = doc.createElement('style')
+        this.styleTag.textContent = `
+          .teleporterListWindow .lindo-teleport-search {
+            height: 44px; padding: 5px 8px; box-sizing: border-box;
+          }
+          .teleporterListWindow .lindo-teleport-search input {
+            width: 100%; height: 34px; box-sizing: border-box;
+            text-align: center; color: white; background: #424242;
+            border: 1px solid #262626; border-radius: 5px; font-size: 1em;
+          }
+          .teleporterListWindow .lindo-teleport-searchable > .panels {
+            height: calc(90% - 44px) !important;
+          }
         `
-
-    const zaapPanels = this.wGame.document.getElementsByClassName('zaapBody')[0].getElementsByClassName('panels')[0]
-
-    zaapPanels.classList.add('lindo_zaapBodyHeight__custom')
-
-    this.zaapSearchContainer = this.wGame.document.createElement('div')
-    this.zaapSearchInput = this.wGame.document.createElement('input')
-
-    this.zaapSearchInput.setAttribute('placeholder', this.LL.mod.zaapSearchFilter.placeholder())
-    this.zaapSearchInput.setAttribute('id', 'zaapName')
-
-    this.zaapSearchContainer.classList.add('lindo_zaapSearch__container')
-    this.zaapSearchInput.classList.add('lindo_zaapSearch__input')
-
-    this.zaapSearchContainer.append(this.zaapSearchInput)
-    this.wGame.document.getElementsByClassName('zaapBody')[0].prepend(this.zaapSearchContainer)
-    requestAnimationFrame(() => {
-      this.zaapSearchInput!.focus()
-      this.zaapSearchInput!.select()
-    })
-  }
-
-  private addFavInDom() {
-    let zaapList = this.wGame.document
-      .getElementsByClassName('lindo_zaapBodyHeight__custom')[0]
-      .getElementsByClassName('row')
-
-    // Ajout de l'étoile fovori (rempli ou non)
-    for (let index = 1; index < zaapList.length - 1; index++) {
-      const currentZaap = zaapList[index]
-
-      const divVide = currentZaap.getElementsByClassName('col')[0]
-      if (divVide.innerHTML === '') {
-        const idZaap = currentZaap.getElementsByClassName('col')[1].getElementsByClassName('destinationName')[0]
-        if (idZaap !== undefined) {
-          const actionButton = (divButton: HTMLDivElement, zaap: string) => {
-            const strFavorites = localStorage.getItem('zaapFav')!
-            const favorites = strFavorites.split(',')
-            let unfav = 0
-            for (let index = 0; index < favorites.length; index++) {
-              if (favorites[index] === zaap) {
-                unfav = index
-              }
-            }
-            if (unfav !== 0) {
-              favorites.splice(unfav, 1)
-              divButton.innerHTML = `
-                            <img width="25" height="24" src="./assets/ui/icons/greyStar.png">
-                            `
-            } else {
-              divButton.innerHTML = `
-                            <img width="25" height="24" src="./assets/ui/icons/goldenStar.png">
-                            `
-              favorites.push(zaap)
-            }
-            localStorage.setItem('zaapFav', favorites.toString())
-          }
-
-          const divButton = document.createElement('div')
-          divButton.onclick = () => {
-            actionButton(divButton, idZaap.innerHTML)
-          }
-
-          const strFavorites = localStorage.getItem('zaapFav')!
-          const favorites = strFavorites.split(',')
-          let found = false
-          for (let index = 0; index < favorites.length; index++) {
-            if (favorites[index] === idZaap.innerHTML) {
-              found = true
-            }
-          }
-
-          if (found) {
-            divButton.innerHTML = `
-                        <img width="25" height="24" src="./assets/ui/icons/goldenStar.png">
-                        `
-          } else {
-            divButton.innerHTML = `
-                        <img width="25" height="24" src="./assets/ui/icons/greyStar.png">
-                        `
-          }
-
-          divVide.appendChild(divButton)
-        }
+        doc.head.appendChild(this.styleTag)
       }
-    }
-
-    // on met les favori "en haut"
-    zaapList = this.wGame.document
-      .getElementsByClassName('lindo_zaapBodyHeight__custom')[0]
-      .getElementsByClassName('row')
-    let saveIndex = 1
-    for (let index = 1; index < zaapList.length - 1; index++) {
-      const currentZaap = zaapList[index]
-      const idZaap = currentZaap.getElementsByClassName('col')[1].getElementsByClassName('destinationName')[0]
-      const strFavorites = localStorage.getItem('zaapFav')!
-      const favorites = strFavorites.split(',')
-      let found = false
-      for (let index = 0; index < favorites.length; index++) {
-        if (idZaap !== undefined)
-          if (favorites[index] === idZaap.innerHTML) {
-            found = true
-          }
+      // Clean remnants from the former injector without touching native destination rows or favorites.
+      body.querySelectorAll('.lindo_zaapSearch__container').forEach((element) => element.remove())
+      const container = doc.createElement('div')
+      container.className = 'lindo-teleport-search'
+      const input = doc.createElement('input')
+      input.type = 'search'
+      input.placeholder = body.classList.contains('subwayBody')
+        ? this.LL.mod.zaapSearchFilter.placeholderZaapi()
+        : this.LL.mod.zaapSearchFilter.placeholder()
+      input.setAttribute('aria-label', input.placeholder)
+      container.appendChild(input)
+      body.insertBefore(container, panels)
+      body.classList.add('lindo-teleport-searchable')
+      const originalDisplay = new Map<HTMLElement, string>()
+      const filter: SearchFilter = {
+        body,
+        panels,
+        container,
+        input,
+        originalDisplay,
+        observer: new this.wGame.MutationObserver(() => this.applyFilter(filter)),
+        onInput: () => this.applyFilter(filter)
       }
-      if (found) {
-        currentZaap.parentNode!.prepend(currentZaap)
-        saveIndex++
-        index = saveIndex
-      }
+      input.addEventListener('input', filter.onInput)
+      filter.observer.observe(panels, { childList: true, subtree: true, characterData: true })
+      this.filters.set(body, filter)
+      this.applyFilter(filter)
     }
   }
 
-  // Prisme
-  private createSearchFilterPrisme(): void {
-    this.injectInputInDomPrisme()
-    this.addFavInDomPrism() // Fav Prisme
-
-    this.zaapSearchInput!.addEventListener('keyup', () => {
-      const zaapWanted = this.zaapSearchInput!.value.toLowerCase()
-
-      const zaapList = this.wGame.document
-        .getElementsByClassName('lindo_prismeBodyHeight__custom')[0]
-        .getElementsByClassName('row') as HTMLCollectionOf<HTMLDivElement>
-
-      for (const currentZaap of zaapList) {
-        const destination = currentZaap.getElementsByClassName('destinationName')
-
-        if (!destination.length) {
-          continue
-        }
-
-        currentZaap.style.display = 'none'
-        if (currentZaap.innerText.toLowerCase().includes(zaapWanted)) {
-          currentZaap.style.display = 'block'
-        }
-      }
-    })
-  }
-
-  private injectInputInDomPrisme(): void {
-    this.styleTag = this.wGame.document.createElement('style')
-    this.wGame.document.getElementsByTagName('head')[0].appendChild(this.styleTag)
-
-    this.styleTag.innerHTML += `
-        .lindo_prismeBodyHeight__custom{
-            height: 70% !important;
-        }
-
-        .lindo_zaapSearch__container{
-            padding: 10px;
-            width: 100%;
-        }
-
-        .lindo_zaapSearch__input{
-            text-align: center;
-            width: 96%;
-            margin-right: 10px;
-            background-color: #424242;
-            border-radius: 5px;
-            color: white;
-            border-color: #262626;
-            height: 34px;
-            font-size: 1em;
-        }
-        `
-
-    const zaapPanels = this.wGame.document.getElementsByClassName('zaapBody')[0].getElementsByClassName('panels')[0]
-
-    zaapPanels.classList.add('lindo_prismeBodyHeight__custom')
-
-    this.zaapSearchContainer = this.wGame.document.createElement('div')
-    this.zaapSearchInput = this.wGame.document.createElement('input')
-
-    this.zaapSearchInput.setAttribute('placeholder', this.LL.mod.zaapSearchFilter.placeholderPrisme())
-    this.zaapSearchInput.setAttribute('id', 'zaapName')
-
-    this.zaapSearchContainer.classList.add('lindo_zaapSearch__container')
-    this.zaapSearchInput.classList.add('lindo_zaapSearch__input')
-
-    this.zaapSearchContainer.append(this.zaapSearchInput)
-    this.wGame.document.getElementsByClassName('zaapBody')[0].prepend(this.zaapSearchContainer)
-    requestAnimationFrame(() => {
-      this.zaapSearchInput!.focus()
-      this.zaapSearchInput!.select()
-    })
-  }
-
-  private addFavInDomPrism() {
-    let zaapList = this.wGame.document
-      .getElementsByClassName('lindo_prismeBodyHeight__custom')[0]
-      .getElementsByClassName('row')
-
-    // Ajout de l'étoile fovori (rempli ou non)
-    for (let index = 1; index < zaapList.length - 1; index++) {
-      const currentZaap = zaapList[index]
-
-      const divVide = currentZaap.getElementsByClassName('col')[0]
-      if (divVide.innerHTML === '') {
-        const idZaap = currentZaap.getElementsByClassName('col')[1].getElementsByClassName('destinationName')[0]
-        if (idZaap !== undefined) {
-          const actionButton = (divButton: HTMLDivElement, zaap: string) => {
-            const strFavorites = localStorage.getItem('zaapFav')!
-            const favorites = strFavorites.split(',')
-            let unfav = 0
-            for (let index = 0; index < favorites.length; index++) {
-              if (favorites[index] === zaap) {
-                unfav = index
-              }
-            }
-            if (unfav !== 0) {
-              favorites.splice(unfav, 1)
-              divButton.innerHTML = `
-                            <img width="25" height="24" src="./assets/ui/icons/greyStar.png">
-                            `
-            } else {
-              divButton.innerHTML = `
-                            <img width="25" height="24" src="./assets/ui/icons/goldenStar.png">
-                            `
-              favorites.push(zaap)
-            }
-            localStorage.setItem('zaapFav', favorites.toString())
-          }
-
-          const divButton = document.createElement('div')
-          divButton.onclick = () => {
-            actionButton(divButton, idZaap.innerHTML)
-          }
-
-          const strFavorites = localStorage.getItem('zaapFav')!
-          const favorites = strFavorites.split(',')
-          let found = false
-          for (let index = 0; index < favorites.length; index++) {
-            if (favorites[index] === idZaap.innerHTML) {
-              found = true
-            }
-          }
-
-          if (found) {
-            divButton.innerHTML = `
-                        <img width="25" height="24" src="./assets/ui/icons/goldenStar.png">
-                        `
-          } else {
-            divButton.innerHTML = `
-                        <img width="25" height="24" src="./assets/ui/icons/greyStar.png">
-                        `
-          }
-
-          divVide.appendChild(divButton)
-        }
-      }
+  private applyFilter(filter: SearchFilter) {
+    const wanted = normalizeSearch(filter.input.value.trim())
+    for (const row of filter.panels.querySelectorAll<HTMLElement>('.row')) {
+      if (!row.querySelector('.destinationName')) continue
+      if (!filter.originalDisplay.has(row)) filter.originalDisplay.set(row, row.style.display)
+      row.style.display = normalizeSearch(row.textContent ?? '').includes(wanted)
+        ? filter.originalDisplay.get(row)!
+        : 'none'
     }
-
-    // on met les favori "en haut"
-    zaapList = this.wGame.document
-      .getElementsByClassName('lindo_prismeBodyHeight__custom')[0]
-      .getElementsByClassName('row')
-    let saveIndex = 1
-    for (let index = 1; index < zaapList.length - 1; index++) {
-      const currentZaap = zaapList[index]
-      const idZaap = currentZaap.getElementsByClassName('col')[1].getElementsByClassName('destinationName')[0]
-      const strFavorites = localStorage.getItem('zaapFav')!
-      const favorites = strFavorites.split(',')
-      let found = false
-      for (let index = 0; index < favorites.length; index++) {
-        if (idZaap !== undefined)
-          if (favorites[index] === idZaap.innerHTML) {
-            found = true
-          }
-      }
-      if (found) {
-        currentZaap.parentNode!.prepend(currentZaap)
-        saveIndex++
-        index = saveIndex
-      }
+    for (const row of filter.originalDisplay.keys()) {
+      if (!filter.panels.contains(row)) filter.originalDisplay.delete(row)
     }
   }
 
-  // Zaapi
-  private createSearchFilterZaapi(): void {
-    this.injectInputInDomZaapi()
-    this.addFavInDomZaapi() // Fav Zaapi
-
-    this.zaapSearchInput!.addEventListener('keyup', () => {
-      const zaapWanted = this.zaapSearchInput!.value.toLowerCase()
-
-      const zaapList = this.wGame.document
-        .getElementsByClassName('lindo_subwayBodyHeight__custom')[0]
-        .getElementsByClassName('row') as HTMLCollectionOf<HTMLDivElement>
-
-      for (const currentZaap of zaapList) {
-        const destination = currentZaap.getElementsByClassName('destinationName')
-
-        if (!destination.length) {
-          continue
-        }
-
-        currentZaap.style.display = 'none'
-        if (currentZaap.innerText.toLowerCase().includes(zaapWanted)) {
-          currentZaap.style.display = 'block'
-        }
-      }
-    })
+  private removeFilter(filter: SearchFilter) {
+    filter.observer.disconnect()
+    filter.input.removeEventListener('input', filter.onInput)
+    for (const [row, display] of filter.originalDisplay) row.style.display = display
+    filter.originalDisplay.clear()
+    filter.body.classList.remove('lindo-teleport-searchable')
+    filter.container.remove()
+    this.filters.delete(filter.body)
   }
 
-  private injectInputInDomZaapi(): void {
-    this.styleTag = this.wGame.document.createElement('style')
-    this.wGame.document.getElementsByTagName('head')[0].appendChild(this.styleTag)
-
-    this.styleTag.innerHTML += `
-        .lindo_subwayBodyHeight__custom{
-            height: 70% !important;
-        }
-
-        .lindo_zaapSearch__container{
-            padding: 10px;
-            width: 100%;
-        }
-
-        .lindo_zaapSearch__input{
-            text-align: center;
-            width: 96%;
-            margin-right: 10px;
-            background-color: #424242;
-            border-radius: 5px;
-            color: white;
-            border-color: #262626;
-            height: 34px;
-            font-size: 1em;
-        }
-        `
-
-    const zaapPanels = this.wGame.document.getElementsByClassName('subwayBody')[0].getElementsByClassName('panels')[0]
-
-    zaapPanels.classList.add('lindo_subwayBodyHeight__custom')
-
-    this.zaapSearchContainer = this.wGame.document.createElement('div')
-    this.zaapSearchInput = this.wGame.document.createElement('input')
-
-    this.zaapSearchInput.setAttribute('placeholder', this.LL.mod.zaapSearchFilter.placeholderZaapi())
-    this.zaapSearchInput.setAttribute('id', 'zaapName')
-
-    this.zaapSearchContainer.classList.add('lindo_zaapSearch__container')
-    this.zaapSearchInput.classList.add('lindo_zaapSearch__input')
-
-    this.zaapSearchContainer.append(this.zaapSearchInput)
-    this.wGame.document.getElementsByClassName('subwayBody')[0].prepend(this.zaapSearchContainer)
-    requestAnimationFrame(() => {
-      this.zaapSearchInput!.focus()
-      this.zaapSearchInput!.select()
-    })
-  }
-
-  // Zaapi Favoris
-  private addFavInDomZaapi() {
-    let zaapList = this.wGame.document
-      .getElementsByClassName('lindo_subwayBodyHeight__custom')[0]
-      .getElementsByClassName('row')
-
-    // Ajout de l'étoile fovori (rempli ou non)
-    for (let index = 1; index < zaapList.length - 1; index++) {
-      const currentZaap = zaapList[index]
-
-      const divVide = currentZaap.getElementsByClassName('col')[0]
-      if (divVide.innerHTML === '') {
-        const idZaap = currentZaap.getElementsByClassName('col')[1].getElementsByClassName('destinationName')[0]
-        if (idZaap !== undefined) {
-          const actionButton = (divButton: HTMLDivElement, zaap: string) => {
-            const strFavorites = localStorage.getItem('zaapFav')!
-            const favorites = strFavorites.split(',')
-            let unfav = 0
-            for (let index = 0; index < favorites.length; index++) {
-              if (favorites[index] === zaap) {
-                unfav = index
-              }
-            }
-            if (unfav !== 0) {
-              favorites.splice(unfav, 1)
-              divButton.innerHTML = `
-                            <img width="25" height="24" src="./assets/ui/icons/greyStar.png">
-                            `
-            } else {
-              divButton.innerHTML = `
-                            <img width="25" height="24" src="./assets/ui/icons/goldenStar.png">
-                            `
-              favorites.push(zaap)
-            }
-            localStorage.setItem('zaapFav', favorites.toString())
-          }
-
-          const divButton = document.createElement('div')
-          divButton.onclick = () => {
-            actionButton(divButton, idZaap.innerHTML)
-          }
-
-          const strFavorites = localStorage.getItem('zaapFav')!
-          const favorites = strFavorites.split(',')
-          let found = false
-          for (let index = 0; index < favorites.length; index++) {
-            if (favorites[index] === idZaap.innerHTML) {
-              found = true
-            }
-          }
-
-          if (found) {
-            divButton.innerHTML = `
-                        <img width="25" height="24" src="./assets/ui/icons/goldenStar.png">
-                        `
-          } else {
-            divButton.innerHTML = `
-                        <img width="25" height="24" src="./assets/ui/icons/greyStar.png">
-                        `
-          }
-
-          divVide.appendChild(divButton)
-        }
-      }
-    }
-
-    // On met les favori "en haut"
-    zaapList = this.wGame.document
-      .getElementsByClassName('lindo_subwayBodyHeight__custom')[0]
-      .getElementsByClassName('row')
-    let saveIndex = 1
-    for (let index = 1; index < zaapList.length - 1; index++) {
-      const currentZaap = zaapList[index]
-      const idZaap = currentZaap.getElementsByClassName('col')[1].getElementsByClassName('destinationName')[0]
-      const strFavorites = localStorage.getItem('zaapFav')!
-      const favorites = strFavorites.split(',')
-      let found = false
-      for (let index = 0; index < favorites.length; index++) {
-        if (idZaap !== undefined)
-          if (favorites[index] === idZaap.innerHTML) {
-            found = true
-          }
-      }
-      if (found) {
-        currentZaap.parentNode!.prepend(currentZaap)
-        saveIndex++
-        index = saveIndex
-      }
-    }
-  }
-
-  private resetSearchFilter(): void {
-    if (this.styleTag) {
-      this.styleTag.remove()
-      this.zaapSearchInput!.remove()
-      this.zaapSearchContainer!.remove()
-    }
+  private resetSearchFilters = () => {
+    this.wGame.clearTimeout(this.pending)
+    this.pending = undefined
+    for (const filter of [...this.filters.values()]) this.removeFilter(filter)
+    this.styleTag?.remove()
+    this.styleTag = undefined
   }
 
   private stop() {
     this.eventManager.close()
-    this.resetSearchFilter()
+    this.resetSearchFilters()
   }
 
-  destroy(): void {
+  destroy() {
     this.stop()
     this.settingDisposer()
   }

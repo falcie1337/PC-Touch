@@ -1,0 +1,67 @@
+﻿arquivo;estado;grupo;linhas_adicionadas;linhas_removidas;mudanca;commit_base;commit_alvo
+LEIA-ME-REPARO.md;A;Raiz, empacotamento e dependências;113;0;Instruções do reparo, execução, instalação, multicontas e limites de validação.;b7233eb;7d6708d
+README.md;M;Raiz, empacotamento e dependências;2;0;Link para as instruções específicas do reparo para Windows.;b7233eb;7d6708d
+VALIDACAO.md;A;Raiz, empacotamento e dependências;58;0;Registro dos checks e dos limites dos testes automatizados/manuais.;b7233eb;7d6708d
+electron-builder.json;M;Raiz, empacotamento e dependências;2;3;Corrige LICENSE nos arquivos empacotados e remove o hook de estatísticas.;b7233eb;7d6708d
+package.json;M;Raiz, empacotamento e dependências;12;9;Revisão repair.6, scripts de teste/build/preparação, requisito Node e dependências ajustadas.;b7233eb;7d6708d
+yarn.lock;M;Raiz, empacotamento e dependências;137;845;"Atualiza resoluções e remove transitivas sem uso; mantém versões reproduzíveis do conjunto ajustado.";b7233eb;7d6708d
+packages/i18n/en/index.ts;M;Traduções;4;1;Reformula seleção de aba e adiciona textos da opção de primeiro plano.;b7233eb;7d6708d
+packages/i18n/es/index.ts;M;Traduções;4;1;Textos em espanhol para seleção de aba e opção de primeiro plano.;b7233eb;7d6708d
+packages/i18n/fr/index.ts;M;Traduções;4;1;Textos em francês para seleção de aba e opção de primeiro plano.;b7233eb;7d6708d
+packages/i18n/i18n-types.ts;M;Traduções;18;2;Tipos gerados para as chaves novas/ajustadas de tradução.;b7233eb;7d6708d
+packages/main/application.ts;M;Main e updater;23;27;Loopback do servidor, IPC de autenticação validado, retirada de envio de contexto e observador duplicado de áudio.;b7233eb;7d6708d
+packages/main/constants/index.ts;M;Main e updater;6;4;"Origens atuais e URL do bootstrap fixada por commit; retira constante da API antiga.";b7233eb;7d6708d
+packages/main/index.ts;M;Main e updater;16;11;Propaga falhas de startup e evita encerrar ao fechar o updater antes de existir janela do jogo.;b7233eb;7d6708d
+packages/main/tsconfig.json;A;Main e updater;11;0;Acrescenta projeto de typecheck para main, preload e contratos compartilhados.;b7233eb;7d6708d
+packages/main/updater/app-updater.ts;D;Main e updater;0;170;Remove atualização de executáveis do upstream abandonado.;b7233eb;7d6708d
+packages/main/updater/game-files.ts;A;Main e updater;49;0;Validação de caminhos, downloads por arquivo temporário e execução com concorrência limitada.;b7233eb;7d6708d
+packages/main/updater/game-patches.ts;A;Main e updater;54;0;"Transformações de bootstrap, opener desktop e áudio; revisão para invalidar o cache.";b7233eb;7d6708d
+packages/main/updater/game-updater.ts;M;Main e updater;155;228;Reorganiza atualização por canal, downloads, patching, versões, remoção de obsoletos e persistência após sucesso.;b7233eb;7d6708d
+packages/main/updater/updater-utils.ts;M;Main e updater;49;8;Valida manifests, recupera cache truncado/arquivos ausentes e compara versão/endereço.;b7233eb;7d6708d
+packages/main/updater/updater.ts;M;Main e updater;12;12;Retira AppUpdater e propaga erro de atualização do jogo após mostrar mensagem.;b7233eb;7d6708d
+packages/main/windows/auth-window.ts;A;Janelas e preload;110;0;Popup isolado, validação de URLs/callbacks, captura do protocolo e cancelamento por tentativa.;b7233eb;7d6708d
+packages/main/windows/game-request-headers.ts;A;Janelas e preload;19;0;Reúne regras de headers, incluindo remoção de Referer das imagens e preservação de credenciais.;b7233eb;7d6708d
+packages/main/windows/game-window.ts;M;Janelas e preload;17;42;Aplica helper de headers, controlador de áudio e restauração da janela ao solicitar foco.;b7233eb;7d6708d
+packages/main/windows/window-audio.ts;A;Janelas e preload;24;0;Observa preferências/foco e combina mute geral, mute da janela e som apenas em primeiro plano.;b7233eb;7d6708d
+packages/preload/index.ts;M;Janelas e preload;5;1;Expõe openWebAuth via IPC mantendo o contrato da ponte LindoAPI.;b7233eb;7d6708d
+packages/renderer/src/App.tsx;M;Renderer: interface, sessão e tipos do jogo;8;24;Retira inicialização/provider Firebase e dependência de analytics para exibir a UI.;b7233eb;7d6708d
+packages/renderer/src/dofus-window/gui/character-display.ts;M;Renderer: interface, sessão e tipos do jogo;12;4;Descreve alinhamento, callback dos assets e liberação opcional do componente nativo.;b7233eb;7d6708d
+packages/renderer/src/dofus-window/gui/gui.ts;M;Renderer: interface, sessão e tipos do jogo;15;8;Descreve barras atuais/antiga e operações necessárias na árvore Wui.;b7233eb;7d6708d
+packages/renderer/src/dofus-window/gui/player-data.ts;M;Renderer: interface, sessão e tipos do jogo;1;0;Acrescenta descrição opcional de qual personagem está controlado para resolver a barra.;b7233eb;7d6708d
+packages/renderer/src/dofus-window/index.ts;M;Renderer: interface, sessão e tipos do jogo;3;0;Descreve ponte de auth e MutationObserver usado no iframe.;b7233eb;7d6708d
+packages/renderer/src/hooks/index.ts;M;Renderer: interface, sessão e tipos do jogo;0;1;Retira reexportação do hook de analytics removido.;b7233eb;7d6708d
+packages/renderer/src/hooks/use-analytics.ts;D;Renderer: interface, sessão e tipos do jogo;0;51;Remove hook de inicialização e envio de analytics.;b7233eb;7d6708d
+packages/renderer/src/providers/analytics-context.ts;D;Renderer: interface, sessão e tipos do jogo;0;22;Remove o contexto React de analytics.;b7233eb;7d6708d
+packages/renderer/src/providers/index.ts;M;Renderer: interface, sessão e tipos do jogo;0;1;Retira reexportação do contexto de analytics removido.;b7233eb;7d6708d
+packages/renderer/src/screens/main-screen/game-screen/GameScreen.tsx;M;Renderer: interface, sessão e tipos do jogo;34;8;Instala ponte de auth, preserva IndexedDB e mostra/trata erro inicial sem desmontar por erros posteriores.;b7233eb;7d6708d
+packages/renderer/src/screens/main-screen/game-screen/game-manager.ts;A;Renderer: interface, sessão e tipos do jogo;211;0;Extrai sessão para classe testável, posterga mods e controla falhas, listeners, timers e nós MST.;b7233eb;7d6708d
+packages/renderer/src/screens/main-screen/game-screen/tab-portrait.ts;A;Renderer: interface, sessão e tipos do jogo;83;0;Renderiza em Wui, espera assets e publica PNG, com timeout e liberação.;b7233eb;7d6708d
+packages/renderer/src/screens/main-screen/game-screen/use-game-manager.ts;M;Renderer: interface, sessão e tipos do jogo;7;173;Reduz hook React a criação/referência e destruição da classe GameManager.;b7233eb;7d6708d
+packages/renderer/src/screens/main-screen/side-bar/SideBar.tsx;M;Renderer: interface, sessão e tipos do jogo;2;2;Ignora arraste sem destino antes de tentar reordenar abas.;b7233eb;7d6708d
+packages/renderer/src/screens/main-screen/side-bar/tab/TabGame.tsx;M;Renderer: interface, sessão e tipos do jogo;1;1;Substitui retrato anterior em vez de acumular elementos na aba.;b7233eb;7d6708d
+packages/renderer/src/screens/main-screen/side-bar/tab/tab.module.scss;M;Renderer: interface, sessão e tipos do jogo;11;3;Encaixa imagem no círculo da aba, com dimensões e object-fit.;b7233eb;7d6708d
+packages/renderer/src/screens/option-screen/features/OptionFightFeatures.tsx;M;Renderer: interface, sessão e tipos do jogo;11;1;Acrescenta checkbox/texto de primeiro plano separado da seleção automática de aba.;b7233eb;7d6708d
+packages/renderer/src/store/game-store/game-store.ts;M;Renderer: interface, sessão e tipos do jogo;13;17;"Limite de oito abas; seleção vizinha ao fechar e reordenação com índices válidos.";b7233eb;7d6708d
+packages/renderer/vite.config.ts;M;Renderer: interface, sessão e tipos do jogo;1;111;Retira bridges de módulos Node/Electron que geravam node:test como diretório inválido no Windows.;b7233eb;7d6708d
+packages/renderer/src/mods/notifications/notifications.ts;M;Mods;16;9;Separa aviso/seleção/foco no turno e trata falha ao criar notificação.;b7233eb;7d6708d
+packages/renderer/src/mods/party-info/party-info.ts;M;Mods;28;18;Ícone nativo de prospecção, atualização após handlers nativos e limpeza de timer/listener duplicado.;b7233eb;7d6708d
+packages/renderer/src/mods/shortcuts/shortcut-bars.ts;A;Mods;12;0;Resolve playerBar/heroBar atuais e fallback da barra antiga.;b7233eb;7d6708d
+packages/renderer/src/mods/shortcuts/shortcuts.ts;M;Mods;23;18;Adapta bindings e execução à barra existente/do personagem controlado.;b7233eb;7d6708d
+packages/renderer/src/mods/zaap-search-filter/zaap-search-filter.ts;M;Mods;110;521;Substitui injeção repetitiva por filtro idempotente, preservando lista/favoritos nativos e limpeza.;b7233eb;7d6708d
+packages/shared/constants/index.ts;M;Contratos e modelos compartilhados;1;0;Acrescenta o canal IPC OPEN_WEB_AUTH.;b7233eb;7d6708d
+packages/shared/models/hotkey-store/window-hotkey/window-hotkey.ts;M;Contratos e modelos compartilhados;2;2;"Altera padrões de próxima/anterior aba; mantém atalhos F1–F8 preexistentes e valores já persistidos.";b7233eb;7d6708d
+packages/shared/models/option-store/game-fight-option/game-fight-option.ts;M;Contratos e modelos compartilhados;4;0;Acrescenta bringToFrontOnFightTurn e action correspondente, padrão false.;b7233eb;7d6708d
+packages/shared/types/index.ts;M;Contratos e modelos compartilhados;1;0;Reexporta o contrato WebAuthResult.;b7233eb;7d6708d
+packages/shared/types/lindo-api.ts;M;Contratos e modelos compartilhados;2;0;Descreve openWebAuth na API pública específica do preload.;b7233eb;7d6708d
+packages/shared/types/web-auth.ts;A;Contratos e modelos compartilhados;4;0;Contrato de retorno com código ou erro da tentativa de autenticação.;b7233eb;7d6708d
+scripts/afterPackHook.js;D;Scripts, testes e fixtures;0;37;Remove envio de estatísticas após empacotar o aplicativo.;b7233eb;7d6708d
+scripts/test.mjs;A;Scripts, testes e fixtures;74;0;"Runner do Node; prepara os módulos reais usados nos testes com TypeScript/esbuild.";b7233eb;7d6708d
+tests/audio-portrait.test.cjs;A;Scripts, testes e fixtures;239;0;Regressões do áudio e do ciclo de renderização/liberação do retrato.;b7233eb;7d6708d
+tests/fixtures/upstream-fixes.js;A;Scripts, testes e fixtures;213;0;Fixture do bootstrap fixado para conferir recorte dos handlers e retirada de popups.;b7233eb;7d6708d
+tests/fixtures/upstream-index.html;A;Scripts, testes e fixtures;95;0;Fixture do HTML fixado para conferir IndexedDB, bootstrap e seleção de auth desktop.;b7233eb;7d6708d
+tests/game-entry.test.cjs;A;Scripts, testes e fixtures;268;0;Regressões da ordem de conexão, sessão, mods e atalhos atuais.;b7233eb;7d6708d
+tests/helpers/dom.cjs;A;Scripts, testes e fixtures;164;0;DOM estrutural mínimo controlado para testar injeção/limpeza, sem layout CSS.;b7233eb;7d6708d
+tests/multi-account.test.cjs;A;Scripts, testes e fixtures;205;0;Regressões de abas e dos modos de seleção/notificação/foco do turno.;b7233eb;7d6708d
+tests/updater.test.cjs;A;Scripts, testes e fixtures;203;0;Regressões de manifests, arquivos, streams, concorrência e bootstrap.;b7233eb;7d6708d
+tests/web-auth.test.cjs;A;Scripts, testes e fixtures;234;0;Regressões de login/callbacks com janelas simuladas, opener e regras de headers.;b7233eb;7d6708d
+tests/zaap-party.test.cjs;A;Scripts, testes e fixtures;227;0;Regressões do campo único de zaap, filtragem, favoritos, abas independentes e indicador do grupo.;b7233eb;7d6708d

@@ -206,7 +206,10 @@ const fr: Translation = {
       fight: {
         header: 'Combat',
         healthBar: 'Afficher des barres de vie en-dessous des combatants',
-        focusFightTurn: 'Basculer automatiquement vers un compte à son tour de jeu',
+        focusFightTurn: "Sélectionner automatiquement l'onglet du personnage au début de son tour",
+        foregroundFightTurn: "Ramener Lindo au premier plan au début du tour d'un personnage",
+        foregroundFightTurnHint:
+          'Désactivez cette option pour garder Lindo en arrière-plan. Les alertes de tour se règlent dans Notifications.',
         estimator: "Afficher l'estimation des dégats des sorts en combat",
         fightChronometer: 'Afficher le chronomètre de combat',
         monsterTooltip: 'Afficher les informations des groupes de monstres sur la carte',

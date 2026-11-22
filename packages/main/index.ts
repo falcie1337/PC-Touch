@@ -27,14 +27,19 @@ if (!app.requestSingleInstanceLock()) {
   process.exit(0)
 }
 
-app.whenReady().then(async () => {
-  logger.debug('App -> whenReady')
-  setupTitlebar()
-  const store = await setupRootStore()
-  await Application.init(store)
-  Application.instance.run()
-})
+app
+  .whenReady()
+  .then(async () => {
+    logger.debug('App -> whenReady')
+    setupTitlebar()
+    const store = await setupRootStore()
+    await Application.init(store)
+    await Application.instance.run()
+  })
+  .catch((error) => {
+    logger.error('Application startup failed:', error)
+    app.quit()
+  })
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit()
-})
+// Application quits when its last game window closes. The temporary updater is
+// closed before the first game window exists and must not terminate startup.

@@ -11,7 +11,7 @@ import {
 } from '@/dofus-window'
 import TypedEmitter from 'typed-emitter'
 import EventEmitter from 'eventemitter3'
-import { EventManager } from '../helpers'
+import { EventManager } from '../helpers/event-manager'
 import { Mod } from '../mod'
 import axios from 'axios'
 import { RootStore } from '@/store'
@@ -105,10 +105,20 @@ export class NotificationsMod extends Mod {
   }
 
   private _sendFightTurnNotif(msg: GameFightTurnStartMessage) {
-    if (!this.wGame.document.hasFocus() && this.wGame.gui.playerData.characterBaseInformations.id === msg.id) {
-      if (this.rootStore.optionStore.gameNotification.fightTurn) {
-        this.eventEmitter.emit('notification')
+    if (this.wGame.document.hasFocus() || this.wGame.gui.playerData.characterBaseInformations.id !== msg.id) return
 
+    const notify = this.rootStore.optionStore.gameNotification.fightTurn
+    const fightOptions = this.rootStore.optionStore.gameFight
+    if (notify) this.eventEmitter.emit('notification')
+
+    if (fightOptions.focusOnFightTurn) {
+      this.eventEmitter.emit('focusTabRequest')
+      if (fightOptions.bringToFrontOnFightTurn) window.lindoAPI.focusCurrentWindow()
+    }
+
+    // A blocked desktop notification must not prevent tab selection or window focus.
+    if (notify) {
+      try {
         const turnNotif = new Notification(
           this.LL.notifications.fightTurn({
             characterName: this.wGame.gui.playerData.characterBaseInformations.name
@@ -116,11 +126,8 @@ export class NotificationsMod extends Mod {
         )
 
         this._handleClickNotification(turnNotif)
-      }
-
-      if (this.rootStore.optionStore.gameFight.focusOnFightTurn) {
-        window.lindoAPI.focusCurrentWindow()
-        this.eventEmitter.emit('focusTabRequest')
+      } catch (error) {
+        window.lindoAPI.logger.warn('Could not display the turn notification', error)()
       }
     }
   }

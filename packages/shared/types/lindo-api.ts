@@ -4,6 +4,7 @@ import { RootStoreSnapshot } from '../models'
 import { FollowInstruction } from './auto-group'
 import { GameContext } from './game-context'
 import { UpdateProgress } from './update-progress'
+import { WebAuthResult } from './web-auth'
 
 export interface LindoTitleBar {
   updateTitle: (title: string) => void
@@ -40,6 +41,7 @@ export interface LindoAPI {
   focusCurrentWindow: () => void
   closeOptionWindow: () => void
   setAudioMuteWindow: (value: boolean) => void
+  openWebAuth: (url: string) => Promise<WebAuthResult>
   // multi account
   saveMasterPassword: (masterPassword: string) => Promise<void>
   removeMasterPassword: () => Promise<void>

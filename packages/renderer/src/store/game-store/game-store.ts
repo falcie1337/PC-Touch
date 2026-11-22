@@ -1,6 +1,8 @@
-import { detach, Instance, SnapshotOut, types } from 'mobx-state-tree'
+import { Instance, SnapshotOut, types } from 'mobx-state-tree'
 import { GameCharacter, MultiAccountContext, withRootStore } from '@lindo/shared'
 import { Game, GameModel } from './game'
+
+export const MAX_GAME_TABS = 8
 
 /**
  * Model description here for TypeScript hints.
@@ -20,25 +22,20 @@ export const GameStoreModel = types
       window.lindoAPI.setAudioMuteWindow(self.isMuted)
     },
     addGame(character?: GameCharacter) {
-      if (self._games.size > 5) {
-        throw new Error('More than 6 game tabs are not supported')
+      if (self._games.size >= MAX_GAME_TABS) {
+        throw new Error(`More than ${MAX_GAME_TABS} game tabs are not supported`)
       }
       const game = self._games.put({ character: character?.id })
       self.gamesOrder.push(game)
       self.selectedGame = game
     },
     removeGame(game: Game) {
+      if (!self._games.has(game.id)) return
       if (self.selectedGame === game) {
-        detach(self.selectedGame)
-        if (self._games.size > 0) {
-          if (self.gamesOrder.indexOf(game) === self.gamesOrder.length - 1) {
-            self.selectedGame = self.gamesOrder[self.gamesOrder.indexOf(game) - 1]
-          } else {
-            self.selectedGame = self.gamesOrder.reverse().find((g) => g !== game)
-          }
-        } else {
-          self.selectedGame = undefined
-        }
+        const index = self.gamesOrder.indexOf(game)
+        const nextIndex = index < self.gamesOrder.length - 1 ? index + 1 : index - 1
+        self.selectedGame = nextIndex >= 0 ? self.gamesOrder[nextIndex] : undefined
+        self.selectedGame?.setHasNotification(false)
       }
       self._games.delete(game.id)
     },
@@ -49,7 +46,7 @@ export const GameStoreModel = types
       }
     },
     selectGameIndex(index: number) {
-      if (self.gamesOrder[index]) {
+      if (index >= 0 && index < self.gamesOrder.length) {
         self.selectedGame = self.gamesOrder[index]
         self.selectedGame.setHasNotification(false)
       }
@@ -93,9 +90,8 @@ export const GameStoreModel = types
       const srcGame = self._games.get(srcGameId)!
       const oldIndex = self.gamesOrder.indexOf(srcGame)
       const newIndex = self.gamesOrder.findIndex((g) => g.id === targetGameId)
-      if (oldIndex !== -1) {
-        self.gamesOrder.splice(oldIndex, 1)
-      }
+      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return
+      self.gamesOrder.splice(oldIndex, 1)
       self.gamesOrder.splice(newIndex, 0, srcGame)
     }
   }))

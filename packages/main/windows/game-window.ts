@@ -9,6 +9,8 @@ import { logger } from '../logger'
 import { observe } from 'mobx'
 import { electronLocalshortcut } from '@hfelix/electron-localshortcut'
 import { platform } from 'os'
+import { gameRequestHeaders } from './game-request-headers'
+import { bindWindowAudio } from './window-audio'
 
 type GameWindowEvents = {
   close: (event: Event) => void
@@ -21,6 +23,7 @@ export class GameWindow extends (EventEmitter as new () => TypedEmitter<GameWind
   private _isMuted = false
   private readonly _index: number
   private readonly _shortcutStoreDisposer: () => void
+  private readonly _audio: ReturnType<typeof bindWindowAudio>
 
   get id() {
     return this._win.webContents.id!
@@ -76,28 +79,9 @@ export class GameWindow extends (EventEmitter as new () => TypedEmitter<GameWind
       }
     })
 
-    // when Referer is send to the ankama server, the request can be blocked
-    this._win.webContents.session.webRequest.onBeforeSendHeaders(
-      {
-        urls: ['https://static.ankama.com/*']
-      },
-      (details, callback) => {
-        const requestHeaders = { ...(details.requestHeaders ?? {}) }
-        delete requestHeaders.Referer
-        const beforeSendResponse: BeforeSendResponse = { requestHeaders }
-        callback(beforeSendResponse)
-      }
-    )
-
-    // remove sec headers on requests
+    // Electron uses only the last listener for this event; keep both rules in one handler.
     this._win.webContents.session.webRequest.onBeforeSendHeaders((details, callback) => {
-      const requestHeaders = { ...(details.requestHeaders ?? {}) }
-      delete requestHeaders['sec-ch-ua']
-      delete requestHeaders['sec-ch-ua-mobile']
-      delete requestHeaders['sec-ch-ua-platform']
-      delete requestHeaders['Sec-Fetch-Site']
-      delete requestHeaders['Sec-Fetch-Mode']
-      delete requestHeaders['Sec-Fetch-Dest']
+      const requestHeaders = gameRequestHeaders(details.url, details.requestHeaders ?? {})
       const beforeSendResponse: BeforeSendResponse = { requestHeaders }
       callback(beforeSendResponse)
     })
@@ -113,29 +97,11 @@ export class GameWindow extends (EventEmitter as new () => TypedEmitter<GameWind
 
     this._win.webContents.setUserAgent(userAgent)
 
-    this._win.webContents.setAudioMuted(this._store.optionStore.window.audioMuted)
+    this._audio = bindWindowAudio(this._win, this._store.optionStore.window, () => this._isMuted)
 
     this._win.on('close', (event) => {
       logger.debug('GameWindow -> close')
       this._close(event)
-    })
-
-    this._win.on('focus', () => {
-      if (this._store.optionStore.window.audioMuted || this._isMuted) {
-        this._win.webContents.setAudioMuted(true)
-        return
-      }
-      this._win.webContents.setAudioMuted(false)
-    })
-
-    this._win.on('blur', () => {
-      if (this._store.optionStore.window.audioMuted || this._isMuted) {
-        this._win.webContents.setAudioMuted(true)
-        return
-      }
-      if (this._store.optionStore.window.soundOnFocus) {
-        this._win.webContents.setAudioMuted(true)
-      }
     })
 
     this._shortcutStoreDisposer = observe(
@@ -193,13 +159,22 @@ export class GameWindow extends (EventEmitter as new () => TypedEmitter<GameWind
   }
 
   private _close(event: Event) {
+    this._audio.dispose()
     this._win.removeAllListeners()
     electronLocalshortcut.unregisterAll(this._win)
     this._shortcutStoreDisposer()
     this.emit('close', event)
   }
 
-  focus = () => this._win.focus()
+  focus = () => {
+    if (this._win.isMinimized()) this._win.restore()
+    this._win.focus()
+  }
+
+  get browserWindow() {
+    return this._win
+  }
+
   isMinimized = () => this._win.isMinimized()
   restore = () => this._win.restore()
 
@@ -209,7 +184,7 @@ export class GameWindow extends (EventEmitter as new () => TypedEmitter<GameWind
 
   setAudioMute(value: boolean) {
     this._isMuted = value
-    this._win.webContents.setAudioMuted(value)
+    this._audio.update()
   }
 
   sendAutoGroupInstruction(instruction: FollowInstruction) {

@@ -8,6 +8,7 @@ import { IAnyType, IMSTArray } from 'mobx-state-tree'
 import { ignoreKeyboardEvent } from '../helpers'
 import { Mod } from '../mod'
 import { Mover } from './mover'
+import { getActiveShortcutBar, getShortcutBars } from './shortcut-bars'
 
 const lowerCaseFirstLetter = (value: string) => {
   return value.charAt(0).toLowerCase() + value.slice(1)
@@ -168,38 +169,42 @@ export class ShortcutsMod extends Mod {
 
     // Spells
     gameInterfaceHotkey.spells.forEach((_, index) => {
-      const selectedSpell = this.wGame.gui.shortcutBar._panels.spell.slotList[index]
-
       this._addShortcutFromArray(gameInterfaceHotkey.spells, index, () => {
+        const selectedSpell = getActiveShortcutBar(this.wGame.gui)?._panels.spell.slotList[index]
+        if (!selectedSpell) return false
         selectedSpell.tap()
         // return true to prevent spell cast multiple times
         return true
       })
 
-      const handleDoubleTap = () => {
-        // TODO:  (HoPollo) : Allow double shortcut tap to work as well (currently only mouseclick works)
-        if (this.wGame.gui.fightManager.fightState === 0) {
-          return
+      for (const bar of getShortcutBars(this.wGame.gui)) {
+        const selectedSpell = bar._panels.spell.slotList[index]
+        if (!selectedSpell) continue
+        const handleDoubleTap = () => {
+          // TODO:  (HoPollo) : Allow double shortcut tap to work as well (currently only mouseclick works)
+          if (this.wGame.gui.fightManager.fightState === 0) {
+            return
+          }
+
+          selectedSpell.tap()
+
+          setTimeout(() => {
+            this.wGame.isoEngine._castSpellImmediately(this.wGame.isoEngine.actorManager.userActor.cellId)
+          }, 150)
         }
 
-        selectedSpell.tap()
-
-        setTimeout(() => {
-          this.wGame.isoEngine._castSpellImmediately(this.wGame.isoEngine.actorManager.userActor.cellId)
-        }, 150)
+        selectedSpell.on('doubletap', handleDoubleTap)
+        this._disposers.push(() => {
+          selectedSpell.removeListener('doubletap', handleDoubleTap)
+        })
       }
-
-      selectedSpell.on('doubletap', handleDoubleTap)
-      this._disposers.push(() => {
-        selectedSpell.removeListener('doubletap', handleDoubleTap)
-      })
     })
 
     // Skills
     gameInterfaceHotkey.items.forEach((_, index) => {
-      const selectedItem = this.wGame.gui.shortcutBar._panels.item.slotList[index]
-
       this._addShortcutFromArray(gameInterfaceHotkey.items, index, () => {
+        const selectedItem = getActiveShortcutBar(this.wGame.gui)?._panels.item.slotList[index]
+        if (!selectedItem) return false
         selectedItem.tap()
         // return true to prevent spell cast multiple times
         return true

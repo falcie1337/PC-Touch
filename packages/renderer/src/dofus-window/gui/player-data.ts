@@ -137,6 +137,7 @@ export interface PlayerData extends TypedEmitter<PlayerDataEvents> {
   guild: Guild
   partyData?: PartyData
   characters: {
+    isHeroCharacterControlled?: () => boolean
     mainCharacterId: number
     mainCharacter: {
       spellData: {

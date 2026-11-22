@@ -1,25 +1,65 @@
-import { AxiosInstance } from 'axios'
+import type { AxiosInstance } from 'axios'
 import fs from 'fs'
-import { Manifest } from './models'
+import type { Manifest } from './models'
+import { gameFilePath } from './game-files'
 
 export type DiffManifest = Record<string, 1 | 0 | -1>
 
 export const retrieveManifests = async ({
   localManifestPath,
   remoteManifestUrl,
-  httpClient
+  httpClient,
+  gamePath,
+  forceDownload = false
 }: {
   localManifestPath: string
   remoteManifestUrl: string
   httpClient: AxiosInstance
+  gamePath?: string
+  forceDownload?: boolean
 }): Promise<[Manifest, Manifest, DiffManifest]> => {
-  const localManifest: Manifest = fs.existsSync(localManifestPath)
-    ? JSON.parse(fs.readFileSync(localManifestPath, 'utf8'))
-    : {}
-  const remoteManifest = await downloadJson<Manifest>(remoteManifestUrl, httpClient)
+  let localManifest: Manifest = { files: {} }
+  if (fs.existsSync(localManifestPath)) {
+    try {
+      localManifest = validateManifest(JSON.parse(fs.readFileSync(localManifestPath, 'utf8')))
+    } catch (error) {
+      // A truncated or obsolete cache should be rebuilt from the remote manifest.
+      if (!(error instanceof SyntaxError) && !(error instanceof InvalidManifestError)) throw error
+    }
+  }
+  const remoteManifest = validateManifest(await downloadJson<unknown>(remoteManifestUrl, httpClient))
   const difference = diffManifest(localManifest, remoteManifest)
 
+  for (const key of Object.keys(remoteManifest.files)) {
+    if (forceDownload || (gamePath && !fs.existsSync(gameFilePath(gamePath, key)))) {
+      difference[key] = 1
+    }
+  }
+
   return [localManifest, remoteManifest, difference]
+}
+
+class InvalidManifestError extends Error {}
+
+export const validateManifest = (value: unknown): Manifest => {
+  if (!value || typeof value !== 'object' || !('files' in value)) {
+    throw new InvalidManifestError('Invalid game manifest: expected a files object')
+  }
+  const files = (value as Manifest).files
+  if (!files || typeof files !== 'object' || Array.isArray(files)) {
+    throw new InvalidManifestError('Invalid game manifest: expected a files object')
+  }
+  for (const [key, entry] of Object.entries(files)) {
+    try {
+      gameFilePath('.', key)
+    } catch (error) {
+      throw new InvalidManifestError(error instanceof Error ? error.message : String(error))
+    }
+    if (!entry || typeof entry.filename !== 'string' || !entry.filename || typeof entry.version !== 'string') {
+      throw new InvalidManifestError(`Invalid game manifest entry: ${key}`)
+    }
+  }
+  return value as Manifest
 }
 
 export const downloadJson = <T>(url: string, httpClient: AxiosInstance): Promise<T> => {
@@ -40,7 +80,8 @@ export const diffManifest = (manifestA: Manifest, manifestB: Manifest): DiffMani
         !manifestA ||
         !manifestA.files ||
         !manifestA.files[i] ||
-        manifestA.files[i].version !== manifestB.files[i].version
+        manifestA.files[i].version !== manifestB.files[i].version ||
+        manifestA.files[i].filename !== manifestB.files[i].filename
       ) {
         differences[i] = 1
       } else {
